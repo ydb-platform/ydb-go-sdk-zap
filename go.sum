@@ -50,6 +50,8 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/ydb-platform/ydb-api-protos v0.0.0-20210921091122-f697ac767e19/go.mod h1:I0NWnA2hX8d2tKctW3AO2ne1Xc+FhvhA8PbP4iXQa5M=
 github.com/ydb-platform/ydb-go-genproto v0.0.0-20210916081217-f4e55570b874 h1:wbpYXEn87uEDkH3RvG37XW2ipEkqxpJUCGAoU1on0yE=
 github.com/ydb-platform/ydb-go-genproto v0.0.0-20210916081217-f4e55570b874/go.mod h1:cc138nptTn9eKptCQl/grxP6pBKpo/bnXDiOxuVZtps=
+github.com/ydb-platform/ydb-go-sdk/v3 v3.0.1-rc0 h1:VkVeLUiNBLj1emZNk/yJKFa5ZmefDkTQbRS/4G+IJss=
+github.com/ydb-platform/ydb-go-sdk/v3 v3.0.1-rc0/go.mod h1:aDAMirAXDdCeMRJV01EykAXXz6Ye2eM7H7PRJb6DvHo=
 go.uber.org/atomic v1.7.0 h1:ADUqmZGgLDDfbSL9ZmPxKTybcoEYHgpYfELNoN+7hsw=
 go.uber.org/atomic v1.7.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 go.uber.org/goleak v1.1.10 h1:z+mqJhf6ss6BSfSM671tgKyZBFPTTJM+HLxnhPC3wu0=
