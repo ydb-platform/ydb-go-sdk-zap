@@ -1,6 +1,6 @@
-# metrics
+# zap
 
-metrics package helps to create ydb-go-sdk traces with monitoring internal state of driver
+zap package helps to create ydb-go-sdk traces with logging driver events with zap
 
 ## Usage
 ```go

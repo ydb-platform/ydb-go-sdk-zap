@@ -63,7 +63,7 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				start := time.Now()
 				return func(info trace.SessionNewDoneInfo) {
 					if info.Error == nil {
-						log.Warn("create finished",
+						log.Info("created",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Int64("nodeID", int64(info.Session.NodeID())),

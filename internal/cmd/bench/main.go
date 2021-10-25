@@ -8,10 +8,12 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/ydb-platform/ydb-go-sdk/v3"
 	"github.com/ydb-platform/ydb-go-sdk/v3/config"
@@ -28,7 +30,20 @@ var (
 
 func init() {
 	var err error
-	log, err = zap.NewDevelopment(zap.IncreaseLevel(zap.DebugLevel))
+	log, err = zap.NewDevelopment(
+		zap.IncreaseLevel(
+			func() zapcore.Level {
+				if logLevel, ok := os.LookupEnv("LOG_LEVEL"); ok {
+					for l := zapcore.DebugLevel; l < zapcore.FatalLevel; l++ {
+						if l.CapitalString() == strings.ToUpper(logLevel) {
+							return l
+						}
+					}
+				}
+				return zapcore.DebugLevel
+			}(),
+		),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -157,7 +172,11 @@ func upsertData(ctx context.Context, c table.Client, prefix, tableName string, c
 					)
 				},
 			)
-			log.Info("bulk upserted", zap.Int("from", shift), zap.Int("to", shift+batchSize), zap.Error(err))
+			if err == nil {
+				log.Debug("bulk upserted", zap.Int("from", shift), zap.Int("to", shift+batchSize))
+			} else {
+				log.Error("bulk upsert failed", zap.Int("from", shift), zap.Int("to", shift+batchSize), zap.Error(err))
+			}
 		}(prefix, tableName, shift)
 	}
 	wg.Wait()
