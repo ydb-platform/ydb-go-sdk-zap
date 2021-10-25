@@ -18,20 +18,37 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				zap.Bool("idempotent", idempotent))
 			start := time.Now()
 			return func(info trace.PoolRetryInternalInfo) func(trace.PoolRetryDoneInfo) {
-				log.Debug("intermediate",
-					zap.String("version", version),
-					zap.Duration("latency", time.Since(start)),
-					zap.Bool("idempotent", idempotent),
-					zap.Error(info.Error),
-				)
-				return func(info trace.PoolRetryDoneInfo) {
-					log.Debug("finish",
+				if info.Error == nil {
+					log.Debug("intermediate",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
-						zap.Int("attempts", info.Attempts),
+					)
+				} else {
+					log.Warn("intermediate",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.Bool("idempotent", idempotent),
 						zap.Error(info.Error),
 					)
+				}
+				return func(info trace.PoolRetryDoneInfo) {
+					if info.Error == nil {
+						log.Debug("finish",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Bool("idempotent", idempotent),
+							zap.Int("attempts", info.Attempts),
+						)
+					} else {
+						log.Error("finish",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Bool("idempotent", idempotent),
+							zap.Int("attempts", info.Attempts),
+							zap.Error(info.Error),
+						)
+					}
 				}
 			}
 		}
@@ -45,18 +62,19 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				)
 				start := time.Now()
 				return func(info trace.SessionNewDoneInfo) {
-					nodeID := func() int64 {
-						if info.Session != nil {
-							return int64(info.Session.NodeID())
-						}
-						return -1
-					}()
-					log.Debug("create finished",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Int64("nodeID", nodeID),
-						zap.Error(info.Error),
-					)
+					if info.Error == nil {
+						log.Warn("create finished",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Int64("nodeID", int64(info.Session.NodeID())),
+						)
+					} else {
+						log.Error("create failed",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Error(info.Error),
+						)
+					}
 				}
 			}
 			t.OnSessionDelete = func(info trace.SessionDeleteStartInfo) func(trace.SessionDeleteDoneInfo) {
@@ -69,14 +87,24 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				)
 				start := time.Now()
 				return func(info trace.SessionDeleteDoneInfo) {
-					log.Debug("deleted",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Uint32("nodeID", session.NodeID()),
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-						zap.Error(info.Error),
-					)
+					if info.Error == nil {
+						log.Debug("deleted",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+						)
+					} else {
+						log.Warn("delete failed",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.Error(info.Error),
+						)
+					}
 				}
 			}
 			t.OnSessionKeepAlive = func(info trace.KeepAliveStartInfo) func(trace.KeepAliveDoneInfo) {
@@ -89,14 +117,24 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				)
 				start := time.Now()
 				return func(info trace.KeepAliveDoneInfo) {
-					log.Debug("keep-alived",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Uint32("nodeID", session.NodeID()),
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-						zap.Error(info.Error),
-					)
+					if info.Error == nil {
+						log.Debug("keep-alived",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+						)
+					} else {
+						log.Warn("keep-alive failed",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.Error(info.Error),
+						)
+					}
 				}
 			}
 		}
@@ -116,16 +154,29 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					)
 					start := time.Now()
 					return func(info trace.PrepareDataQueryDoneInfo) {
-						log.Debug(
-							"prepared",
-							zap.String("version", version),
-							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
-							zap.String("id", session.ID()),
-							zap.String("status", session.Status()),
-							zap.String("query", query),
-							zap.String("yql", info.Result.String()),
-						)
+						if info.Error == nil {
+							log.Debug(
+								"prepared",
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Uint32("nodeID", session.NodeID()),
+								zap.String("id", session.ID()),
+								zap.String("status", session.Status()),
+								zap.String("query", query),
+								zap.String("yql", info.Result.String()),
+							)
+						} else {
+							log.Error(
+								"prepare failed",
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Uint32("nodeID", session.NodeID()),
+								zap.String("id", session.ID()),
+								zap.String("status", session.Status()),
+								zap.String("query", query),
+								zap.Error(info.Error),
+							)
+						}
 					}
 				}
 				t.OnSessionQueryExecute = func(info trace.ExecuteDataQueryStartInfo) func(trace.SessionQueryPrepareDoneInfo) {
@@ -144,19 +195,33 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					)
 					start := time.Now()
 					return func(info trace.SessionQueryPrepareDoneInfo) {
-						log.Debug("executed",
-							zap.String("version", version),
-							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
-							zap.String("id", session.ID()),
-							zap.String("status", session.Status()),
-							zap.String("tx", tx.ID()),
-							zap.String("yql", query.String()),
-							zap.String("params", params.String()),
-							zap.Bool("prepared", info.Prepared),
-							zap.NamedError("resultErr", info.Result.Err()),
-							zap.Error(info.Error),
-						)
+						if info.Error == nil {
+							log.Debug("executed",
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Uint32("nodeID", session.NodeID()),
+								zap.String("id", session.ID()),
+								zap.String("status", session.Status()),
+								zap.String("tx", tx.ID()),
+								zap.String("yql", query.String()),
+								zap.String("params", params.String()),
+								zap.Bool("prepared", info.Prepared),
+								zap.NamedError("resultErr", info.Result.Err()),
+							)
+						} else {
+							log.Error("execute failed",
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Uint32("nodeID", session.NodeID()),
+								zap.String("id", session.ID()),
+								zap.String("status", session.Status()),
+								zap.String("tx", tx.ID()),
+								zap.String("yql", query.String()),
+								zap.String("params", params.String()),
+								zap.Bool("prepared", info.Prepared),
+								zap.Error(info.Error),
+							)
+						}
 					}
 				}
 			}
@@ -176,17 +241,30 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					)
 					start := time.Now()
 					return func(info trace.SessionQueryStreamExecuteDoneInfo) {
-						log.Debug("executed",
-							zap.String("version", version),
-							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
-							zap.String("id", session.ID()),
-							zap.String("status", session.Status()),
-							zap.String("yql", query.String()),
-							zap.String("params", params.String()),
-							zap.NamedError("resultErr", info.Result.Err()),
-							zap.Error(info.Error),
-						)
+						if info.Error == nil {
+							log.Debug("executed",
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Uint32("nodeID", session.NodeID()),
+								zap.String("id", session.ID()),
+								zap.String("status", session.Status()),
+								zap.String("yql", query.String()),
+								zap.String("params", params.String()),
+								zap.NamedError("resultErr", info.Result.Err()),
+								zap.Error(info.Error),
+							)
+						} else {
+							log.Error("execute failed",
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Uint32("nodeID", session.NodeID()),
+								zap.String("id", session.ID()),
+								zap.String("status", session.Status()),
+								zap.String("yql", query.String()),
+								zap.String("params", params.String()),
+								zap.Error(info.Error),
+							)
+						}
 					}
 				}
 				t.OnSessionQueryStreamRead = func(info trace.SessionQueryStreamReadStartInfo) func(trace.SessionQueryStreamReadDoneInfo) {
@@ -199,15 +277,25 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					)
 					start := time.Now()
 					return func(info trace.SessionQueryStreamReadDoneInfo) {
-						log.Debug("read",
-							zap.String("version", version),
-							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
-							zap.String("id", session.ID()),
-							zap.String("status", session.Status()),
-							zap.NamedError("resultErr", info.Result.Err()),
-							zap.Error(info.Error),
-						)
+						if info.Error == nil {
+							log.Debug("read",
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Uint32("nodeID", session.NodeID()),
+								zap.String("id", session.ID()),
+								zap.String("status", session.Status()),
+								zap.NamedError("resultErr", info.Result.Err()),
+							)
+						} else {
+							log.Error("read failed",
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Uint32("nodeID", session.NodeID()),
+								zap.String("id", session.ID()),
+								zap.String("status", session.Status()),
+								zap.Error(info.Error),
+							)
+						}
 					}
 				}
 			}
@@ -224,15 +312,25 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				)
 				start := time.Now()
 				return func(info trace.SessionTransactionBeginDoneInfo) {
-					log.Debug("began",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Uint32("nodeID", session.NodeID()),
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-						zap.String("tx", info.Tx.ID()),
-						zap.Error(info.Error),
-					)
+					if info.Error == nil {
+						log.Debug("began",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.String("tx", info.Tx.ID()),
+						)
+					} else {
+						log.Debug("begin failed",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.Error(info.Error),
+						)
+					}
 				}
 			}
 			t.OnSessionTransactionCommit = func(info trace.SessionTransactionCommitStartInfo) func(trace.SessionTransactionCommitDoneInfo) {
@@ -247,15 +345,26 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				)
 				start := time.Now()
 				return func(info trace.SessionTransactionCommitDoneInfo) {
-					log.Debug("committed",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Uint32("nodeID", session.NodeID()),
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-						zap.String("tx", tx.ID()),
-						zap.Error(info.Error),
-					)
+					if info.Error == nil {
+						log.Debug("committed",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.String("tx", tx.ID()),
+						)
+					} else {
+						log.Debug("commit failed",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.String("tx", tx.ID()),
+							zap.Error(info.Error),
+						)
+					}
 				}
 			}
 			t.OnSessionTransactionRollback = func(info trace.SessionTransactionRollbackStartInfo) func(trace.SessionTransactionRollbackDoneInfo) {
@@ -270,15 +379,26 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				)
 				start := time.Now()
 				return func(info trace.SessionTransactionRollbackDoneInfo) {
-					log.Debug("rollback",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Uint32("nodeID", session.NodeID()),
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-						zap.String("tx", tx.ID()),
-						zap.Error(info.Error),
-					)
+					if info.Error == nil {
+						log.Debug("rollback done",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.String("tx", tx.ID()),
+						)
+					} else {
+						log.Error("rollback failed",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.String("tx", tx.ID()),
+							zap.Error(info.Error),
+						)
+					}
 				}
 			}
 		}
@@ -306,11 +426,18 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				)
 				start := time.Now()
 				return func(info trace.PoolCloseDoneInfo) {
-					log.Info("closed",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Error(info.Error),
-					)
+					if info.Error != nil {
+						log.Info("closed",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+						)
+					} else {
+						log.Error("close failed",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Error(info.Error),
+						)
+					}
 				}
 			}
 		}
@@ -331,7 +458,7 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							zap.String("status", session.Status()),
 						)
 					} else {
-						log.Debug("created",
+						log.Error("created",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Error(info.Error),
@@ -370,14 +497,24 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				)
 				start := time.Now()
 				return func(info trace.PoolPutDoneInfo) {
-					log.Debug("put",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Uint32("nodeID", session.NodeID()),
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-						zap.Error(info.Error),
-					)
+					if info.Error == nil {
+						log.Debug("put",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+						)
+					} else {
+						log.Error("put failed",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Uint32("nodeID", session.NodeID()),
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.Error(info.Error),
+						)
+					}
 				}
 			}
 			t.OnPoolGet = func(info trace.PoolGetStartInfo) func(trace.PoolGetDoneInfo) {
@@ -397,7 +534,7 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							zap.Int("attempts", info.RetryAttempts),
 						)
 					} else {
-						log.Debug("got",
+						log.Warn("get failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Int("attempts", info.RetryAttempts),
@@ -422,7 +559,7 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							zap.String("status", session.Status()),
 						)
 					} else {
-						log.Debug("wait done",
+						log.Warn("wait failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Error(info.Error),
@@ -448,15 +585,26 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						zap.String("status", session.Status()),
 					)
 					return func(info trace.PoolTakeDoneInfo) {
-						log.Debug("took",
-							zap.String("version", version),
-							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
-							zap.String("id", session.ID()),
-							zap.String("status", session.Status()),
-							zap.Bool("took", info.Took),
-							zap.Error(info.Error),
-						)
+						if info.Error == nil {
+							log.Debug("took",
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Uint32("nodeID", session.NodeID()),
+								zap.String("id", session.ID()),
+								zap.String("status", session.Status()),
+								zap.Bool("took", info.Took),
+							)
+						} else {
+							log.Error("take failed",
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Uint32("nodeID", session.NodeID()),
+								zap.String("id", session.ID()),
+								zap.String("status", session.Status()),
+								zap.Bool("took", info.Took),
+								zap.Error(info.Error),
+							)
+						}
 					}
 				}
 			}
