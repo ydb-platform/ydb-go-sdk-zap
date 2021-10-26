@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Table makes trace.Table with zap logging
 func Table(log *zap.Logger, details Details) trace.Table {
 	log = log.Named("ydb").Named("table")
 	t := trace.Table{}
