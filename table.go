@@ -532,13 +532,13 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
-							zap.Int("attempts", info.RetryAttempts),
+							zap.Int("attempts", info.Attempts),
 						)
 					} else {
 						log.Warn("get failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Int("attempts", info.RetryAttempts),
+							zap.Int("attempts", info.Attempts),
 							zap.Error(info.Error),
 						)
 					}
