@@ -67,7 +67,7 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Info("created",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Int64("nodeID", int64(info.Session.NodeID())),
+							zap.String("id", info.Session.ID()),
 						)
 					} else {
 						log.Error("create failed",
@@ -82,7 +82,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				session := info.Session
 				log.Debug("try to delete",
 					zap.String("version", version),
-					zap.Uint32("nodeID", session.NodeID()),
 					zap.String("id", session.ID()),
 					zap.String("status", session.Status()),
 				)
@@ -92,7 +91,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Debug("deleted",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 						)
@@ -100,7 +98,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Warn("delete failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.Error(info.Error),
@@ -112,7 +109,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				session := info.Session
 				log.Debug("keep-aliving",
 					zap.String("version", version),
-					zap.Uint32("nodeID", session.NodeID()),
 					zap.String("id", session.ID()),
 					zap.String("status", session.Status()),
 				)
@@ -122,7 +118,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Debug("keep-alived",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 						)
@@ -130,7 +125,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Warn("keep-alive failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.Error(info.Error),
@@ -148,7 +142,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					query := info.Query
 					log.Debug("preparing",
 						zap.String("version", version),
-						zap.Uint32("nodeID", session.NodeID()),
 						zap.String("id", session.ID()),
 						zap.String("status", session.Status()),
 						zap.String("query", query),
@@ -160,7 +153,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 								"prepared",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
-								zap.Uint32("nodeID", session.NodeID()),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
 								zap.String("query", query),
@@ -171,7 +163,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 								"prepare failed",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
-								zap.Uint32("nodeID", session.NodeID()),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
 								zap.String("query", query),
@@ -187,7 +178,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					params := info.Parameters
 					log.Debug("executing",
 						zap.String("version", version),
-						zap.Uint32("nodeID", session.NodeID()),
 						zap.String("id", session.ID()),
 						zap.String("status", session.Status()),
 						zap.String("tx", tx.ID()),
@@ -200,7 +190,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							log.Debug("executed",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
-								zap.Uint32("nodeID", session.NodeID()),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
 								zap.String("tx", tx.ID()),
@@ -213,7 +202,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							log.Error("execute failed",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
-								zap.Uint32("nodeID", session.NodeID()),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
 								zap.String("tx", tx.ID()),
@@ -234,7 +222,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					params := info.Parameters
 					log.Debug("executing",
 						zap.String("version", version),
-						zap.Uint32("nodeID", session.NodeID()),
 						zap.String("id", session.ID()),
 						zap.String("status", session.Status()),
 						zap.String("yql", query.String()),
@@ -246,7 +233,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							log.Debug("executed",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
-								zap.Uint32("nodeID", session.NodeID()),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
 								zap.String("yql", query.String()),
@@ -258,7 +244,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							log.Error("execute failed",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
-								zap.Uint32("nodeID", session.NodeID()),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
 								zap.String("yql", query.String()),
@@ -272,7 +257,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					session := info.Session
 					log.Debug("reading",
 						zap.String("version", version),
-						zap.Uint32("nodeID", session.NodeID()),
 						zap.String("id", session.ID()),
 						zap.String("status", session.Status()),
 					)
@@ -282,7 +266,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							log.Debug("read",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
-								zap.Uint32("nodeID", session.NodeID()),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
 								zap.NamedError("resultErr", info.Result.Err()),
@@ -291,7 +274,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							log.Error("read failed",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
-								zap.Uint32("nodeID", session.NodeID()),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
 								zap.Error(info.Error),
@@ -307,7 +289,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				session := info.Session
 				log.Debug("beginning",
 					zap.String("version", version),
-					zap.Uint32("nodeID", session.NodeID()),
 					zap.String("id", session.ID()),
 					zap.String("status", session.Status()),
 				)
@@ -317,7 +298,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Debug("began",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.String("tx", info.Tx.ID()),
@@ -326,7 +306,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Debug("begin failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.Error(info.Error),
@@ -339,7 +318,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				tx := info.Tx
 				log.Debug("committing",
 					zap.String("version", version),
-					zap.Uint32("nodeID", session.NodeID()),
 					zap.String("id", session.ID()),
 					zap.String("status", session.Status()),
 					zap.String("tx", tx.ID()),
@@ -350,7 +328,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Debug("committed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.String("tx", tx.ID()),
@@ -359,7 +336,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Debug("commit failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.String("tx", tx.ID()),
@@ -373,7 +349,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				tx := info.Tx
 				log.Debug("try to rollback",
 					zap.String("version", version),
-					zap.Uint32("nodeID", session.NodeID()),
 					zap.String("id", session.ID()),
 					zap.String("status", session.Status()),
 					zap.String("tx", tx.ID()),
@@ -384,7 +359,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Debug("rollback done",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.String("tx", tx.ID()),
@@ -393,7 +367,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Error("rollback failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.String("tx", tx.ID()),
@@ -454,7 +427,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						session := info.Session
 						log.Debug("created",
 							zap.String("version", version),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 						)
@@ -471,7 +443,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				session := info.Session
 				log.Debug("closing",
 					zap.String("version", version),
-					zap.Uint32("nodeID", session.NodeID()),
 					zap.String("id", session.ID()),
 					zap.String("status", session.Status()),
 				)
@@ -480,7 +451,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					log.Debug("closed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
-						zap.Uint32("nodeID", session.NodeID()),
 						zap.String("id", session.ID()),
 						zap.String("status", session.Status()),
 					)
@@ -492,7 +462,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				session := info.Session
 				log.Debug("putting",
 					zap.String("version", version),
-					zap.Uint32("nodeID", session.NodeID()),
 					zap.String("id", session.ID()),
 					zap.String("status", session.Status()),
 				)
@@ -502,7 +471,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Debug("put",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 						)
@@ -510,7 +478,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Error("put failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.Error(info.Error),
@@ -529,7 +496,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Debug("got",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.Int("attempts", info.Attempts),
@@ -555,7 +521,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 						log.Debug("wait done",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
-							zap.Uint32("nodeID", session.NodeID()),
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 						)
@@ -572,7 +537,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				session := info.Session
 				log.Debug("taking",
 					zap.String("version", version),
-					zap.Uint32("nodeID", session.NodeID()),
 					zap.String("id", session.ID()),
 					zap.String("status", session.Status()),
 				)
@@ -581,7 +545,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					log.Debug("taking...",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
-						zap.Uint32("nodeID", session.NodeID()),
 						zap.String("id", session.ID()),
 						zap.String("status", session.Status()),
 					)
@@ -590,7 +553,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							log.Debug("took",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
-								zap.Uint32("nodeID", session.NodeID()),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
 								zap.Bool("took", info.Took),
@@ -599,7 +561,6 @@ func Table(log *zap.Logger, details Details) trace.Table {
 							log.Error("take failed",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
-								zap.Uint32("nodeID", session.NodeID()),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
 								zap.Bool("took", info.Took),
