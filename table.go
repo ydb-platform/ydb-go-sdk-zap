@@ -517,19 +517,35 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 				start := time.Now()
 				return func(info trace.PoolWaitDoneInfo) {
 					if info.Error == nil {
-						session := info.Session
-						log.Debug("wait done",
-							zap.String("version", version),
-							zap.Duration("latency", time.Since(start)),
-							zap.String("id", session.ID()),
-							zap.String("status", session.Status()),
-						)
+						if info.Session == nil {
+							log.Debug(`wait done without any significant result`,
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+							)
+						} else {
+							log.Debug(`wait done`,
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.String("id", info.Session.ID()),
+								zap.String("status", info.Session.Status()),
+							)
+						}
 					} else {
-						log.Warn("wait failed",
-							zap.String("version", version),
-							zap.Duration("latency", time.Since(start)),
-							zap.Error(info.Error),
-						)
+						if info.Session == nil {
+							log.Debug(`wait failed without any significant result`,
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.Error(info.Error),
+							)
+						} else {
+							log.Debug(`wait failed`,
+								zap.String("version", version),
+								zap.Duration("latency", time.Since(start)),
+								zap.String("id", info.Session.ID()),
+								zap.String("status", info.Session.Status()),
+								zap.Error(info.Error),
+							)
+						}
 					}
 				}
 			}
