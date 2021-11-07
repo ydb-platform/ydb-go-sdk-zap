@@ -7,10 +7,10 @@ import (
 )
 
 // Table makes trace.Table with zap logging
-func Table(log *zap.Logger, details Details) trace.Table {
+func Table(log *zap.Logger, details trace.Details) trace.Table {
 	log = log.Named("ydb").Named("table")
 	t := trace.Table{}
-	if details&tablePoolRetryEvents != 0 {
+	if details&trace.TablePoolRetryEvents != 0 {
 		log := log.Named("retry")
 		t.OnPoolRetry = func(info trace.PoolRetryStartInfo) func(info trace.PoolRetryInternalInfo) func(trace.PoolRetryDoneInfo) {
 			idempotent := info.Idempotent
@@ -54,9 +54,9 @@ func Table(log *zap.Logger, details Details) trace.Table {
 			}
 		}
 	}
-	if details&TableSessionEvents != 0 {
+	if details&trace.TableSessionEvents != 0 {
 		log := log.Named("session")
-		if details&tableSessionEvents != 0 {
+		if details&trace.TableSessionLifeCycleEvents != 0 {
 			t.OnSessionNew = func(info trace.SessionNewStartInfo) func(trace.SessionNewDoneInfo) {
 				log.Debug("try to create",
 					zap.String("version", version),
@@ -133,9 +133,9 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				}
 			}
 		}
-		if details&tableSessionQueryEvents != 0 {
+		if details&trace.TableSessionQueryEvents != 0 {
 			log := log.Named("query")
-			if details&tableSessionQueryInvokeEvents != 0 {
+			if details&trace.TableSessionQueryInvokeEvents != 0 {
 				log := log.Named("invoke")
 				t.OnSessionQueryPrepare = func(info trace.SessionQueryPrepareStartInfo) func(trace.PrepareDataQueryDoneInfo) {
 					session := info.Session
@@ -214,7 +214,7 @@ func Table(log *zap.Logger, details Details) trace.Table {
 					}
 				}
 			}
-			if details&tableSessionQueryStreamEvents != 0 {
+			if details&trace.TableSessionQueryStreamEvents != 0 {
 				log := log.Named("stream")
 				t.OnSessionQueryStreamExecute = func(info trace.SessionQueryStreamExecuteStartInfo) func(trace.SessionQueryStreamExecuteDoneInfo) {
 					session := info.Session
@@ -283,7 +283,7 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				}
 			}
 		}
-		if details&tableSessionTransactionEvents != 0 {
+		if details&trace.TableSessionTransactionEvents != 0 {
 			log := log.Named("transaction")
 			t.OnSessionTransactionBegin = func(info trace.SessionTransactionBeginStartInfo) func(trace.SessionTransactionBeginDoneInfo) {
 				session := info.Session
@@ -377,9 +377,9 @@ func Table(log *zap.Logger, details Details) trace.Table {
 			}
 		}
 	}
-	if details&TablePoolEvents != 0 {
+	if details&trace.TablePoolEvents != 0 {
 		log := log.Named("pool")
-		if details&tablePoolLifeCycleEvents != 0 {
+		if details&trace.TablePoolLifeCycleEvents != 0 {
 			t.OnPoolInit = func(info trace.PoolInitStartInfo) func(trace.PoolInitDoneInfo) {
 				log.Info("initializing",
 					zap.String("version", version),
@@ -415,7 +415,7 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				}
 			}
 		}
-		if details&tablePoolSessionLifeCycleEvents != 0 {
+		if details&trace.TablePoolSessionLifeCycleEvents != 0 {
 			log := log.Named("session")
 			t.OnPoolSessionNew = func(info trace.PoolSessionNewStartInfo) func(trace.PoolSessionNewDoneInfo) {
 				log.Debug("try to create",
@@ -457,7 +457,7 @@ func Table(log *zap.Logger, details Details) trace.Table {
 				}
 			}
 		}
-		if details&tablePoolAPIEvents != 0 {
+		if details&trace.TablePoolAPIEvents != 0 {
 			t.OnPoolPut = func(info trace.PoolPutStartInfo) func(trace.PoolPutDoneInfo) {
 				session := info.Session
 				log.Debug("putting",

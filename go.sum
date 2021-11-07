@@ -47,10 +47,10 @@ github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81P
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/ydb-platform/ydb-go-genproto v0.0.0-20211027125732-d0444e2f7970 h1:0bdjqef6VRelL+BGkeSmUucCzN3PVecjO+oBG8AlKn0=
-github.com/ydb-platform/ydb-go-genproto v0.0.0-20211027125732-d0444e2f7970/go.mod h1:cc138nptTn9eKptCQl/grxP6pBKpo/bnXDiOxuVZtps=
-github.com/ydb-platform/ydb-go-sdk/v3 v3.2.6 h1:DZp7vNkQlLA00ZjO+aVL22id+QeTRTiablwOIPC+6R8=
-github.com/ydb-platform/ydb-go-sdk/v3 v3.2.6/go.mod h1:r3QfM16/G8c2MmaXLGUofnARSafuAGQdv6wBzkOKtQI=
+github.com/ydb-platform/ydb-go-genproto v0.0.0-20211103074319-526e57659e16 h1:qXCHbeZrRyfUqE9u9R5LaviQAV57+rCMnqvDeB8ipZE=
+github.com/ydb-platform/ydb-go-genproto v0.0.0-20211103074319-526e57659e16/go.mod h1:cc138nptTn9eKptCQl/grxP6pBKpo/bnXDiOxuVZtps=
+github.com/ydb-platform/ydb-go-sdk/v3 v3.3.0 h1:xPACi3JfI9haKIn6rW5nW0nAMuHe8xizFdgmmIY9TZw=
+github.com/ydb-platform/ydb-go-sdk/v3 v3.3.0/go.mod h1:7LNVPmWX6sv7YHyqBR4tUb6hKdNxYmHU9FOaEK/N+14=
 go.uber.org/atomic v1.7.0 h1:ADUqmZGgLDDfbSL9ZmPxKTybcoEYHgpYfELNoN+7hsw=
 go.uber.org/atomic v1.7.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 go.uber.org/goleak v1.1.10 h1:z+mqJhf6ss6BSfSM671tgKyZBFPTTJM+HLxnhPC3wu0=

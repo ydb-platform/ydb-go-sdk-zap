@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
 	"math/rand"
 	_ "net/http/pprof"
 	"os"
@@ -71,11 +72,11 @@ func main() {
 		ydb.WithSessionPoolIdleThreshold(time.Second*5),
 		ydb.WithTraceDriver(ydbZap.Driver(
 			log,
-			ydbZap.DetailsAll,
+			trace.DetailsAll,
 		)),
 		ydb.WithTraceTable(ydbZap.Table(
 			log,
-			ydbZap.DetailsAll,
+			trace.DetailsAll,
 		)),
 		ydb.WithGrpcConnectionTTL(5*time.Second),
 	)
