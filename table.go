@@ -174,19 +174,18 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 				t.OnSessionQueryExecute = func(info trace.ExecuteDataQueryStartInfo) func(trace.SessionQueryPrepareDoneInfo) {
 					session := info.Session
 					query := info.Query
-					tx := info.Tx
 					params := info.Parameters
 					log.Debug("executing",
 						zap.String("version", version),
 						zap.String("id", session.ID()),
 						zap.String("status", session.Status()),
-						zap.String("tx", tx.ID()),
 						zap.String("yql", query.String()),
 						zap.String("params", params.String()),
 					)
 					start := time.Now()
 					return func(info trace.SessionQueryPrepareDoneInfo) {
 						if info.Error == nil {
+							tx := info.Tx
 							log.Debug("executed",
 								zap.String("version", version),
 								zap.Duration("latency", time.Since(start)),
@@ -204,7 +203,6 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 								zap.Duration("latency", time.Since(start)),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
-								zap.String("tx", tx.ID()),
 								zap.String("yql", query.String()),
 								zap.String("params", params.String()),
 								zap.Bool("prepared", info.Prepared),
