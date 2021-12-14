@@ -78,7 +78,6 @@ func main() {
 			log,
 			trace.DetailsAll,
 		)),
-		ydb.WithGrpcConnectionTTL(5*time.Second),
 	)
 	if err != nil {
 		panic(err)
