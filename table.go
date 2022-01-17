@@ -235,7 +235,6 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 								zap.String("status", session.Status()),
 								zap.String("yql", query.String()),
 								zap.String("params", params.String()),
-								zap.NamedError("resultErr", info.Result.Err()),
 								zap.Error(info.Error),
 							)
 						} else {
@@ -266,7 +265,6 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 								zap.Duration("latency", time.Since(start)),
 								zap.String("id", session.ID()),
 								zap.String("status", session.Status()),
-								zap.NamedError("resultErr", info.Result.Err()),
 							)
 						} else {
 							log.Error("read failed",

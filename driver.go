@@ -389,7 +389,6 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 					zap.String("address", address),
 					zap.Bool("local", dataCenter),
 					zap.String("state", info.State.String()),
-					zap.Error(info.Error),
 				)
 			}
 		}
