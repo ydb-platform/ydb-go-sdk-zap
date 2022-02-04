@@ -12,37 +12,80 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 	t := trace.Table{}
 	if details&trace.TablePoolRetryEvents != 0 {
 		log := log.Named("retry")
-		t.OnPoolRetry = func(info trace.PoolRetryStartInfo) func(info trace.PoolRetryInternalInfo) func(trace.PoolRetryDoneInfo) {
+		do := log.Named("do")
+		doTx := log.Named("doTx")
+		t.OnPoolDo = func(info trace.PoolDoStartInfo) func(info trace.PoolDoInternalInfo) func(trace.PoolDoDoneInfo) {
 			idempotent := info.Idempotent
-			log.Debug("init",
+			do.Debug("init",
 				zap.String("version", version),
 				zap.Bool("idempotent", idempotent))
 			start := time.Now()
-			return func(info trace.PoolRetryInternalInfo) func(trace.PoolRetryDoneInfo) {
+			return func(info trace.PoolDoInternalInfo) func(trace.PoolDoDoneInfo) {
 				if info.Error == nil {
-					log.Debug("intermediate",
+					do.Debug("intermediate",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
 					)
 				} else {
-					log.Warn("intermediate",
+					do.Warn("intermediate",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
 						zap.Error(info.Error),
 					)
 				}
-				return func(info trace.PoolRetryDoneInfo) {
+				return func(info trace.PoolDoDoneInfo) {
 					if info.Error == nil {
-						log.Debug("finish",
+						do.Debug("finish",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Bool("idempotent", idempotent),
 							zap.Int("attempts", info.Attempts),
 						)
 					} else {
-						log.Error("finish",
+						do.Error("finish",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Bool("idempotent", idempotent),
+							zap.Int("attempts", info.Attempts),
+							zap.Error(info.Error),
+						)
+					}
+				}
+			}
+		}
+		t.OnPoolDoTx = func(info trace.PoolDoTxStartInfo) func(info trace.PoolDoTxInternalInfo) func(trace.PoolDoTxDoneInfo) {
+			idempotent := info.Idempotent
+			doTx.Debug("init",
+				zap.String("version", version),
+				zap.Bool("idempotent", idempotent))
+			start := time.Now()
+			return func(info trace.PoolDoTxInternalInfo) func(trace.PoolDoTxDoneInfo) {
+				if info.Error == nil {
+					doTx.Debug("intermediate",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.Bool("idempotent", idempotent),
+					)
+				} else {
+					doTx.Warn("intermediate",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.Bool("idempotent", idempotent),
+						zap.Error(info.Error),
+					)
+				}
+				return func(info trace.PoolDoTxDoneInfo) {
+					if info.Error == nil {
+						doTx.Debug("finish",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Bool("idempotent", idempotent),
+							zap.Int("attempts", info.Attempts),
+						)
+					} else {
+						doTx.Error("finish",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Bool("idempotent", idempotent),
