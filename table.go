@@ -1,9 +1,11 @@
 package zap
 
 import (
-	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
-	"go.uber.org/zap"
 	"time"
+
+	"go.uber.org/zap"
+
+	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
 )
 
 // Table makes trace.Table with zap logging
@@ -14,13 +16,13 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 		log := log.Named("retry")
 		do := log.Named("do")
 		doTx := log.Named("doTx")
-		t.OnPoolDo = func(info trace.PoolDoStartInfo) func(info trace.PoolDoInternalInfo) func(trace.PoolDoDoneInfo) {
+		t.OnPoolDo = func(info trace.PoolDoStartInfo) func(info trace.PoolDoIntermediateInfo) func(trace.PoolDoDoneInfo) {
 			idempotent := info.Idempotent
 			do.Debug("init",
 				zap.String("version", version),
 				zap.Bool("idempotent", idempotent))
 			start := time.Now()
-			return func(info trace.PoolDoInternalInfo) func(trace.PoolDoDoneInfo) {
+			return func(info trace.PoolDoIntermediateInfo) func(trace.PoolDoDoneInfo) {
 				if info.Error == nil {
 					do.Debug("intermediate",
 						zap.String("version", version),
@@ -55,13 +57,13 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 				}
 			}
 		}
-		t.OnPoolDoTx = func(info trace.PoolDoTxStartInfo) func(info trace.PoolDoTxInternalInfo) func(trace.PoolDoTxDoneInfo) {
+		t.OnPoolDoTx = func(info trace.PoolDoTxStartInfo) func(info trace.PoolDoTxIntermediateInfo) func(trace.PoolDoTxDoneInfo) {
 			idempotent := info.Idempotent
 			doTx.Debug("init",
 				zap.String("version", version),
 				zap.Bool("idempotent", idempotent))
 			start := time.Now()
-			return func(info trace.PoolDoTxInternalInfo) func(trace.PoolDoTxDoneInfo) {
+			return func(info trace.PoolDoTxIntermediateInfo) func(trace.PoolDoTxDoneInfo) {
 				if info.Error == nil {
 					doTx.Debug("intermediate",
 						zap.String("version", version),
@@ -180,7 +182,11 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 			log := log.Named("query")
 			if details&trace.TableSessionQueryInvokeEvents != 0 {
 				log := log.Named("invoke")
-				t.OnSessionQueryPrepare = func(info trace.SessionQueryPrepareStartInfo) func(trace.PrepareDataQueryDoneInfo) {
+				t.OnSessionQueryPrepare = func(
+					info trace.PrepareDataQueryStartInfo,
+				) func(
+					trace.PrepareDataQueryDoneInfo,
+				) {
 					session := info.Session
 					query := info.Query
 					log.Debug("preparing",
@@ -214,7 +220,11 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						}
 					}
 				}
-				t.OnSessionQueryExecute = func(info trace.ExecuteDataQueryStartInfo) func(trace.SessionQueryPrepareDoneInfo) {
+				t.OnSessionQueryExecute = func(
+					info trace.ExecuteDataQueryStartInfo,
+				) func(
+					trace.ExecuteDataQueryDoneInfo,
+				) {
 					session := info.Session
 					query := info.Query
 					params := info.Parameters
@@ -226,7 +236,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.String("params", params.String()),
 					)
 					start := time.Now()
-					return func(info trace.SessionQueryPrepareDoneInfo) {
+					return func(info trace.ExecuteDataQueryDoneInfo) {
 						if info.Error == nil {
 							tx := info.Tx
 							log.Debug("executed",
@@ -257,7 +267,13 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 			}
 			if details&trace.TableSessionQueryStreamEvents != 0 {
 				log := log.Named("stream")
-				t.OnSessionQueryStreamExecute = func(info trace.SessionQueryStreamExecuteStartInfo) func(trace.SessionQueryStreamExecuteDoneInfo) {
+				t.OnSessionQueryStreamExecute = func(
+					info trace.SessionQueryStreamExecuteStartInfo,
+				) func(
+					intermediateInfo trace.SessionQueryStreamExecuteIntermediateInfo,
+				) func(
+					trace.SessionQueryStreamExecuteDoneInfo,
+				) {
 					session := info.Session
 					query := info.Query
 					params := info.Parameters
@@ -269,31 +285,50 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.String("params", params.String()),
 					)
 					start := time.Now()
-					return func(info trace.SessionQueryStreamExecuteDoneInfo) {
+					return func(
+						info trace.SessionQueryStreamExecuteIntermediateInfo,
+					) func(
+						trace.SessionQueryStreamExecuteDoneInfo,
+					) {
 						if info.Error == nil {
-							log.Debug("executed",
-								zap.String("version", version),
-								zap.Duration("latency", time.Since(start)),
-								zap.String("id", session.ID()),
-								zap.String("status", session.Status()),
-								zap.String("yql", query.String()),
-								zap.String("params", params.String()),
-								zap.Error(info.Error),
-							)
+							log.Debug(`intermediate`)
 						} else {
-							log.Error("execute failed",
-								zap.String("version", version),
-								zap.Duration("latency", time.Since(start)),
-								zap.String("id", session.ID()),
-								zap.String("status", session.Status()),
-								zap.String("yql", query.String()),
-								zap.String("params", params.String()),
+							log.Error(`intermediate failed`,
 								zap.Error(info.Error),
 							)
 						}
+						return func(info trace.SessionQueryStreamExecuteDoneInfo) {
+							if info.Error == nil {
+								log.Debug("executed",
+									zap.String("version", version),
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.String("yql", query.String()),
+									zap.String("params", params.String()),
+									zap.Error(info.Error),
+								)
+							} else {
+								log.Error("execute failed",
+									zap.String("version", version),
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.String("yql", query.String()),
+									zap.String("params", params.String()),
+									zap.Error(info.Error),
+								)
+							}
+						}
 					}
 				}
-				t.OnSessionQueryStreamRead = func(info trace.SessionQueryStreamReadStartInfo) func(trace.SessionQueryStreamReadDoneInfo) {
+				t.OnSessionQueryStreamRead = func(
+					info trace.SessionQueryStreamReadStartInfo,
+				) func(
+					trace.SessionQueryStreamReadIntermediateInfo,
+				) func(
+					trace.SessionQueryStreamReadDoneInfo,
+				) {
 					session := info.Session
 					log.Debug("reading",
 						zap.String("version", version),
@@ -301,22 +336,35 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.String("status", session.Status()),
 					)
 					start := time.Now()
-					return func(info trace.SessionQueryStreamReadDoneInfo) {
+					return func(
+						info trace.SessionQueryStreamReadIntermediateInfo,
+					) func(
+						trace.SessionQueryStreamReadDoneInfo,
+					) {
 						if info.Error == nil {
-							log.Debug("read",
-								zap.String("version", version),
-								zap.Duration("latency", time.Since(start)),
-								zap.String("id", session.ID()),
-								zap.String("status", session.Status()),
-							)
+							log.Debug(`intermediate`)
 						} else {
-							log.Error("read failed",
-								zap.String("version", version),
-								zap.Duration("latency", time.Since(start)),
-								zap.String("id", session.ID()),
-								zap.String("status", session.Status()),
+							log.Error(`intermediate failed`,
 								zap.Error(info.Error),
 							)
+						}
+						return func(info trace.SessionQueryStreamReadDoneInfo) {
+							if info.Error == nil {
+								log.Debug("read",
+									zap.String("version", version),
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+								)
+							} else {
+								log.Error("read failed",
+									zap.String("version", version),
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.Error(info.Error),
+								)
+							}
 						}
 					}
 				}
