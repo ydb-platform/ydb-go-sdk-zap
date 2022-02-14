@@ -1,9 +1,11 @@
 package zap
 
 import (
-	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
-	"go.uber.org/zap"
 	"time"
+
+	"go.uber.org/zap"
+
+	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
 )
 
 // Driver makes trace.Driver with zap logging
@@ -263,30 +265,6 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 							zap.Error(info.Error),
 						)
 					}
-				}
-			}
-		}
-	}
-	if details&trace.DriverDiscoveryEvents != 0 {
-		log := log.Named("discovery")
-		t.OnDiscovery = func(info trace.DiscoveryStartInfo) func(trace.DiscoveryDoneInfo) {
-			log.Debug("try to discover",
-				zap.String("version", version),
-			)
-			start := time.Now()
-			return func(info trace.DiscoveryDoneInfo) {
-				if info.Error == nil {
-					log.Debug("discover finished",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Strings("endpoints", info.Endpoints),
-					)
-				} else {
-					log.Error("discover failed",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Error(info.Error),
-					)
 				}
 			}
 		}
