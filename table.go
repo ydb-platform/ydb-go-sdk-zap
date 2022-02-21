@@ -543,6 +543,13 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					)
 				}
 			}
+			t.OnPoolStateChange = func(info trace.PooStateChangeInfo) {
+				log.Info("change",
+					zap.String("version", version),
+					zap.Int("size", info.Size),
+					zap.String("event", info.Event),
+				)
+			}
 		}
 		if details&trace.TablePoolAPIEvents != 0 {
 			t.OnPoolPut = func(info trace.PoolPutStartInfo) func(trace.PoolPutDoneInfo) {
@@ -630,43 +637,6 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 								zap.Duration("latency", time.Since(start)),
 								zap.String("id", info.Session.ID()),
 								zap.String("status", info.Session.Status()),
-								zap.Error(info.Error),
-							)
-						}
-					}
-				}
-			}
-			t.OnPoolTake = func(info trace.PoolTakeStartInfo) func(doneInfo trace.PoolTakeWaitInfo) func(doneInfo trace.PoolTakeDoneInfo) {
-				session := info.Session
-				log.Debug("taking",
-					zap.String("version", version),
-					zap.String("id", session.ID()),
-					zap.String("status", session.Status()),
-				)
-				start := time.Now()
-				return func(info trace.PoolTakeWaitInfo) func(info trace.PoolTakeDoneInfo) {
-					log.Debug("taking...",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-					)
-					return func(info trace.PoolTakeDoneInfo) {
-						if info.Error == nil {
-							log.Debug("took",
-								zap.String("version", version),
-								zap.Duration("latency", time.Since(start)),
-								zap.String("id", session.ID()),
-								zap.String("status", session.Status()),
-								zap.Bool("took", info.Took),
-							)
-						} else {
-							log.Error("take failed",
-								zap.String("version", version),
-								zap.Duration("latency", time.Since(start)),
-								zap.String("id", session.ID()),
-								zap.String("status", session.Status()),
-								zap.Bool("took", info.Took),
 								zap.Error(info.Error),
 							)
 						}
