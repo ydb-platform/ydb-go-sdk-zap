@@ -271,6 +271,38 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 	}
 	if details&trace.DriverClusterEvents != 0 {
 		log := log.Named("cluster")
+		t.OnClusterInit = func(info trace.ClusterInitStartInfo) func(trace.ClusterInitDoneInfo) {
+			log.Debug("init start",
+				zap.String("version", version),
+			)
+			start := time.Now()
+			return func(info trace.ClusterInitDoneInfo) {
+				log.Info("init done",
+					zap.String("version", version),
+					zap.Duration("latency", time.Since(start)),
+				)
+			}
+		}
+		t.OnClusterClose = func(info trace.ClusterCloseStartInfo) func(trace.ClusterCloseDoneInfo) {
+			log.Debug("close start",
+				zap.String("version", version),
+			)
+			start := time.Now()
+			return func(info trace.ClusterCloseDoneInfo) {
+				if info.Error == nil {
+					log.Debug("close done",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+					)
+				} else {
+					log.Warn("close failed",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.Error(info.Error),
+					)
+				}
+			}
+		}
 		t.OnClusterGet = func(info trace.ClusterGetStartInfo) func(trace.ClusterGetDoneInfo) {
 			log.Debug("try to get conn",
 				zap.String("version", version),
