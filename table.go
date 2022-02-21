@@ -487,7 +487,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 				)
 				start := time.Now()
 				return func(info trace.PoolCloseDoneInfo) {
-					if info.Error != nil {
+					if info.Error == nil {
 						log.Info("closed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
