@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -33,15 +32,10 @@ func init() {
 	var err error
 	log, err = zap.NewDevelopment(
 		zap.IncreaseLevel(
-			func() zapcore.Level {
-				if logLevel, ok := os.LookupEnv("LOG_LEVEL"); ok {
-					for l := zapcore.DebugLevel; l < zapcore.FatalLevel; l++ {
-						if l.CapitalString() == strings.ToUpper(logLevel) {
-							return l
-						}
-					}
-				}
-				return zapcore.DebugLevel
+			func() (l zapcore.Level) {
+				l = zapcore.DebugLevel
+				_ = l.UnmarshalText([]byte(os.Getenv("LOG_LEVEL")))
+				return l
 			}(),
 		),
 	)
