@@ -5,32 +5,33 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/ydb-platform/ydb-go-sdk/v3/log"
 	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
 )
 
-// Driver makes trace.Driver with zap logging
-func Driver(log *zap.Logger, details trace.Details) trace.Driver {
-	log = log.Named("ydb").Named("driver")
+// Driver makes trace.Driver with zap lging
+func Driver(l *zap.Logger, details trace.Details) trace.Driver {
+	l = l.Named("ydb").Named("driver")
 	t := trace.Driver{}
 	if details&trace.DriverNetEvents != 0 {
-		log := log.Named("net")
+		l := l.Named("net")
 		t.OnNetRead = func(info trace.NetReadStartInfo) func(trace.NetReadDoneInfo) {
 			address := info.Address
-			log.Debug("try to read",
+			l.Debug("try to read",
 				zap.String("version", version),
 				zap.String("address", address),
 			)
 			start := time.Now()
 			return func(info trace.NetReadDoneInfo) {
 				if info.Error == nil {
-					log.Debug("read",
+					l.Debug("read",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
 						zap.Int("received", info.Received),
 					)
 				} else {
-					log.Warn("read failed",
+					l.Warn("read failed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
@@ -42,21 +43,21 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		}
 		t.OnNetWrite = func(info trace.NetWriteStartInfo) func(trace.NetWriteDoneInfo) {
 			address := info.Address
-			log.Debug("try to write",
+			l.Debug("try to write",
 				zap.String("version", version),
 				zap.String("address", address),
 			)
 			start := time.Now()
 			return func(info trace.NetWriteDoneInfo) {
 				if info.Error == nil {
-					log.Debug("wrote",
+					l.Debug("wrote",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
 						zap.Int("sent", info.Sent),
 					)
 				} else {
-					log.Warn("write failed",
+					l.Warn("write failed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
@@ -68,20 +69,20 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		}
 		t.OnNetDial = func(info trace.NetDialStartInfo) func(trace.NetDialDoneInfo) {
 			address := info.Address
-			log.Debug("try to dial",
+			l.Debug("try to dial",
 				zap.String("version", version),
 				zap.String("address", address),
 			)
 			start := time.Now()
 			return func(info trace.NetDialDoneInfo) {
 				if info.Error == nil {
-					log.Debug("dialed",
+					l.Debug("dialed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
 					)
 				} else {
-					log.Error("dial failed",
+					l.Error("dial failed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
@@ -92,20 +93,20 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		}
 		t.OnNetClose = func(info trace.NetCloseStartInfo) func(trace.NetCloseDoneInfo) {
 			address := info.Address
-			log.Debug("try to close",
+			l.Debug("try to close",
 				zap.String("version", version),
 				zap.String("address", address),
 			)
 			start := time.Now()
 			return func(info trace.NetCloseDoneInfo) {
 				if info.Error == nil {
-					log.Debug("closed",
+					l.Debug("closed",
 						zap.Duration("latency", time.Since(start)),
 						zap.String("version", version),
 						zap.String("address", address),
 					)
 				} else {
-					log.Warn("close failed",
+					l.Warn("close failed",
 						zap.Duration("latency", time.Since(start)),
 						zap.String("version", version),
 						zap.String("address", address),
@@ -116,11 +117,11 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		}
 	}
 	if details&trace.DriverCoreEvents != 0 {
-		log := log.Named("core")
+		l := l.Named("core")
 		t.OnConnTake = func(info trace.ConnTakeStartInfo) func(trace.ConnTakeDoneInfo) {
 			address := info.Endpoint.Address()
 			dataCenter := info.Endpoint.LocalDC()
-			log.Debug("try to take conn",
+			l.Debug("try to take conn",
 				zap.String("version", version),
 				zap.String("address", address),
 				zap.Bool("dataCenter", dataCenter),
@@ -128,14 +129,14 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 			start := time.Now()
 			return func(info trace.ConnTakeDoneInfo) {
 				if info.Error == nil {
-					log.Debug("conn took",
+					l.Debug("conn took",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
 						zap.Bool("dataCenter", dataCenter),
 					)
 				} else {
-					log.Warn("conn take failed",
+					l.Warn("conn take failed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
@@ -148,14 +149,14 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		t.OnConnRelease = func(info trace.ConnReleaseStartInfo) func(trace.ConnReleaseDoneInfo) {
 			address := info.Endpoint.Address()
 			dataCenter := info.Endpoint.LocalDC()
-			log.Debug("try to release conn",
+			l.Debug("try to release conn",
 				zap.String("version", version),
 				zap.String("address", address),
 				zap.Bool("dataCenter", dataCenter),
 			)
 			start := time.Now()
 			return func(info trace.ConnReleaseDoneInfo) {
-				log.Debug("conn released",
+				l.Debug("conn released",
 					zap.String("version", version),
 					zap.Duration("latency", time.Since(start)),
 					zap.String("address", address),
@@ -167,7 +168,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		t.OnConnStateChange = func(info trace.ConnStateChangeStartInfo) func(trace.ConnStateChangeDoneInfo) {
 			address := info.Endpoint.Address()
 			dataCenter := info.Endpoint.LocalDC()
-			log.Debug("conn state change",
+			l.Debug("conn state change",
 				zap.String("version", version),
 				zap.String("address", address),
 				zap.Bool("dataCenter", dataCenter),
@@ -175,7 +176,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 			)
 			start := time.Now()
 			return func(info trace.ConnStateChangeDoneInfo) {
-				log.Debug("conn state changed",
+				l.Debug("conn state changed",
 					zap.String("version", version),
 					zap.Duration("latency", time.Since(start)),
 					zap.String("address", address),
@@ -188,7 +189,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 			address := info.Endpoint.Address()
 			dataCenter := info.Endpoint.LocalDC()
 			method := string(info.Method)
-			log.Debug("try to invoke",
+			l.Debug("try to invoke",
 				zap.String("version", version),
 				zap.String("address", address),
 				zap.Bool("dataCenter", dataCenter),
@@ -197,7 +198,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 			start := time.Now()
 			return func(info trace.ConnInvokeDoneInfo) {
 				if info.Error == nil {
-					log.Debug("invoked",
+					l.Debug("invoked",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
@@ -205,7 +206,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 						zap.String("method", method),
 					)
 				} else {
-					log.Warn("invoke failed",
+					l.Warn("invoke failed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
@@ -220,7 +221,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 			address := info.Endpoint.Address()
 			dataCenter := info.Endpoint.LocalDC()
 			method := string(info.Method)
-			log.Debug("try to streaming",
+			l.Debug("try to streaming",
 				zap.String("version", version),
 				zap.String("address", address),
 				zap.Bool("dataCenter", dataCenter),
@@ -229,7 +230,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 			start := time.Now()
 			return func(info trace.ConnNewStreamRecvInfo) func(trace.ConnNewStreamDoneInfo) {
 				if info.Error == nil {
-					log.Debug("streaming intermediate receive",
+					l.Debug("streaming intermediate receive",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
@@ -237,7 +238,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 						zap.String("method", method),
 					)
 				} else {
-					log.Warn("streaming intermediate receive failed",
+					l.Warn("streaming intermediate receive failed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
@@ -248,7 +249,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 				}
 				return func(info trace.ConnNewStreamDoneInfo) {
 					if info.Error == nil {
-						log.Debug("streaming finished",
+						l.Debug("streaming finished",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.String("address", address),
@@ -256,7 +257,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 							zap.String("method", method),
 						)
 					} else {
-						log.Warn("streaming failed",
+						l.Warn("streaming failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.String("address", address),
@@ -270,32 +271,32 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		}
 	}
 	if details&trace.DriverClusterEvents != 0 {
-		log := log.Named("cluster")
+		l := l.Named("cluster")
 		t.OnClusterInit = func(info trace.ClusterInitStartInfo) func(trace.ClusterInitDoneInfo) {
-			log.Debug("init start",
+			l.Debug("init start",
 				zap.String("version", version),
 			)
 			start := time.Now()
 			return func(info trace.ClusterInitDoneInfo) {
-				log.Info("init done",
+				l.Info("init done",
 					zap.String("version", version),
 					zap.Duration("latency", time.Since(start)),
 				)
 			}
 		}
 		t.OnClusterClose = func(info trace.ClusterCloseStartInfo) func(trace.ClusterCloseDoneInfo) {
-			log.Debug("close start",
+			l.Debug("close start",
 				zap.String("version", version),
 			)
 			start := time.Now()
 			return func(info trace.ClusterCloseDoneInfo) {
 				if info.Error == nil {
-					log.Debug("close done",
+					l.Debug("close done",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 					)
 				} else {
-					log.Warn("close failed",
+					l.Warn("close failed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Error(info.Error),
@@ -304,20 +305,20 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 			}
 		}
 		t.OnClusterGet = func(info trace.ClusterGetStartInfo) func(trace.ClusterGetDoneInfo) {
-			log.Debug("try to get conn",
+			l.Debug("try to get conn",
 				zap.String("version", version),
 			)
 			start := time.Now()
 			return func(info trace.ClusterGetDoneInfo) {
 				if info.Error == nil {
-					log.Debug("conn got",
+					l.Debug("conn got",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", info.Endpoint.Address()),
 						zap.Bool("local", info.Endpoint.LocalDC()),
 					)
 				} else {
-					log.Warn("conn get failed",
+					l.Warn("conn get failed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Error(info.Error),
@@ -328,14 +329,14 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		t.OnClusterInsert = func(info trace.ClusterInsertStartInfo) func(trace.ClusterInsertDoneInfo) {
 			address := info.Endpoint.Address()
 			dataCenter := info.Endpoint.LocalDC()
-			log.Debug("inserting",
+			l.Debug("inserting",
 				zap.String("version", version),
 				zap.String("address", address),
 				zap.Bool("local", dataCenter),
 			)
 			start := time.Now()
 			return func(info trace.ClusterInsertDoneInfo) {
-				log.Info("inserted",
+				l.Info("inserted",
 					zap.String("version", version),
 					zap.Duration("latency", time.Since(start)),
 					zap.String("address", address),
@@ -347,14 +348,14 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		t.OnClusterRemove = func(info trace.ClusterRemoveStartInfo) func(trace.ClusterRemoveDoneInfo) {
 			address := info.Endpoint.Address()
 			dataCenter := info.Endpoint.LocalDC()
-			log.Debug("removing",
+			l.Debug("removing",
 				zap.String("version", version),
 				zap.String("address", address),
 				zap.Bool("local", dataCenter),
 			)
 			start := time.Now()
 			return func(info trace.ClusterRemoveDoneInfo) {
-				log.Info("removed",
+				l.Info("removed",
 					zap.String("version", version),
 					zap.Duration("latency", time.Since(start)),
 					zap.String("address", address),
@@ -366,14 +367,14 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		t.OnClusterUpdate = func(info trace.ClusterUpdateStartInfo) func(trace.ClusterUpdateDoneInfo) {
 			address := info.Endpoint.Address()
 			dataCenter := info.Endpoint.LocalDC()
-			log.Debug("updating",
+			l.Debug("updating",
 				zap.String("version", version),
 				zap.String("address", address),
 				zap.Bool("local", dataCenter),
 			)
 			start := time.Now()
 			return func(info trace.ClusterUpdateDoneInfo) {
-				log.Info("updated",
+				l.Info("updated",
 					zap.String("version", version),
 					zap.Duration("latency", time.Since(start)),
 					zap.String("address", address),
@@ -385,7 +386,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		t.OnPessimizeNode = func(info trace.PessimizeNodeStartInfo) func(trace.PessimizeNodeDoneInfo) {
 			address := info.Endpoint.Address()
 			dataCenter := info.Endpoint.LocalDC()
-			log.Warn("pessimizing",
+			l.Warn("pessimizing",
 				zap.String("version", version),
 				zap.String("address", address),
 				zap.Bool("local", dataCenter),
@@ -393,7 +394,7 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 			)
 			start := time.Now()
 			return func(info trace.PessimizeNodeDoneInfo) {
-				log.Warn("pessimized",
+				l.Warn("pessimized",
 					zap.String("version", version),
 					zap.Duration("latency", time.Since(start)),
 					zap.String("address", address),
@@ -404,24 +405,23 @@ func Driver(log *zap.Logger, details trace.Details) trace.Driver {
 		}
 	}
 	if details&trace.DriverCredentialsEvents != 0 {
-		log := log.Named("credentials")
+		l := l.Named("credentials")
 		t.OnGetCredentials = func(info trace.GetCredentialsStartInfo) func(trace.GetCredentialsDoneInfo) {
-			log.Debug("getting",
+			l.Debug("getting",
 				zap.String("version", version),
 			)
 			start := time.Now()
 			return func(info trace.GetCredentialsDoneInfo) {
 				if info.Error == nil {
-					log.Debug("got",
+					l.Debug("got",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
-						zap.Bool("token ok", info.TokenOk),
+						zap.String("token", log.Secret(info.Token)),
 					)
 				} else {
-					log.Error("get failed",
+					l.Error("get failed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
-						zap.Bool("token ok", info.TokenOk),
 						zap.Error(info.Error),
 					)
 				}
