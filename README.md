@@ -23,14 +23,10 @@ func main() {
     db, err := ydb.New(
         context.Background(),
 		ydb.MustConnectionString(connection),
-		ydb.WithTraceDriver(ydbZap.Driver(
+		ydbZap.WithTraces(
 			log,
 			ydbZap.DetailsAll,
-		)),
-		ydb.WithTraceTable(ydbZap.Table(
-			log,
-			ydbZap.DetailsAll,
-		)),
+		),
 	)
     // work with db
 }
