@@ -18,10 +18,14 @@ func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
 			start := time.Now()
 			return func(info trace.DiscoverDoneInfo) {
 				if info.Error == nil {
+					endpoints := make([]string, 0, len(info.Endpoints))
+					for _, e := range info.Endpoints {
+						endpoints = append(endpoints, e.String())
+					}
 					log.Debug("discover finished",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
-						zap.Strings("endpoints", info.Endpoints),
+						zap.Strings("endpoints", endpoints),
 					)
 				} else {
 					log.Error("discover failed",
