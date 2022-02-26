@@ -82,7 +82,7 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 						zap.String("address", address),
 					)
 				} else {
-					l.Error("dial failed",
+					l.Warn("dial failed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.String("address", address),
@@ -151,27 +151,16 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 				}
 			}
 		}
-		t.OnConnRelease = func(info trace.ConnReleaseStartInfo) func(trace.ConnReleaseDoneInfo) {
-			endpoint := info.Endpoint
-			l.Debug("try to release conn",
+		t.OnConnUsagesChange = func(info trace.ConnUsagesChangeInfo) {
+			l.Debug("conn usages changed",
 				zap.String("version", version),
-				zap.String("address", endpoint.Address()),
-				zap.Time("lastUpdated", endpoint.LastUpdated()),
-				zap.String("location", endpoint.Location()),
-				zap.Bool("dataCenter", endpoint.LocalDC()),
+				zap.String("address", info.Endpoint.Address()),
+				zap.Time("lastUpdated", info.Endpoint.LastUpdated()),
+				zap.String("location", info.Endpoint.Location()),
+				zap.Bool("dataCenter", info.Endpoint.LocalDC()),
+				zap.Int("usages", info.Usages),
 			)
-			start := time.Now()
-			return func(info trace.ConnReleaseDoneInfo) {
-				l.Debug("conn released",
-					zap.String("version", version),
-					zap.Duration("latency", time.Since(start)),
-					zap.String("address", endpoint.Address()),
-					zap.Time("lastUpdated", endpoint.LastUpdated()),
-					zap.String("location", endpoint.Location()),
-					zap.Bool("dataCenter", endpoint.LocalDC()),
-					zap.Int("locks", info.Lock),
-				)
-			}
+
 		}
 		t.OnConnStateChange = func(info trace.ConnStateChangeStartInfo) func(trace.ConnStateChangeDoneInfo) {
 			endpoint := info.Endpoint
