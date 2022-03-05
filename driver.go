@@ -185,6 +185,34 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 				)
 			}
 		}
+		t.OnRepeaterWakeUp = func(info trace.RepeaterTickStartInfo) func(trace.RepeaterTickDoneInfo) {
+			name := info.Name
+			event := info.Event
+			l.Info("repeater wake up",
+				zap.String("version", version),
+				zap.String("name", name),
+				zap.String("event", event),
+			)
+			start := time.Now()
+			return func(info trace.RepeaterTickDoneInfo) {
+				if info.Error == nil {
+					l.Info("repeater wake up done",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.String("name", name),
+						zap.String("event", event),
+					)
+				} else {
+					l.Info("repeater wake up fail",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.String("name", name),
+						zap.String("event", event),
+						zap.Error(info.Error),
+					)
+				}
+			}
+		}
 		t.OnConnInvoke = func(info trace.ConnInvokeStartInfo) func(trace.ConnInvokeDoneInfo) {
 			endpoint := info.Endpoint
 			method := string(info.Method)

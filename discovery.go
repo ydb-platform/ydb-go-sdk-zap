@@ -12,7 +12,7 @@ func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
 	if details&trace.DiscoveryEvents != 0 {
 		log = log.Named("discovery")
 		t.OnDiscover = func(info trace.DiscoverStartInfo) func(trace.DiscoverDoneInfo) {
-			log.Debug("try to discover",
+			log.Info("try to discover",
 				zap.String("version", version),
 			)
 			start := time.Now()
@@ -22,7 +22,7 @@ func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
 					for _, e := range info.Endpoints {
 						endpoints = append(endpoints, e.String())
 					}
-					log.Debug("discover finished",
+					log.Info("discover finished",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Strings("endpoints", endpoints),
