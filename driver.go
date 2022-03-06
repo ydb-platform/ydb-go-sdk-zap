@@ -116,8 +116,39 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 			}
 		}
 	}
-	if details&trace.DriverCoreEvents != 0 {
-		l := l.Named("core")
+	if details&trace.DriverRepeaterEvents != 0 {
+		l := l.Named("repeater")
+		t.OnRepeaterWakeUp = func(info trace.RepeaterTickStartInfo) func(trace.RepeaterTickDoneInfo) {
+			name := info.Name
+			event := info.Event
+			l.Info("repeater wake up",
+				zap.String("version", version),
+				zap.String("name", name),
+				zap.String("event", event),
+			)
+			start := time.Now()
+			return func(info trace.RepeaterTickDoneInfo) {
+				if info.Error == nil {
+					l.Info("repeater wake up done",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.String("name", name),
+						zap.String("event", event),
+					)
+				} else {
+					l.Info("repeater wake up fail",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.String("name", name),
+						zap.String("event", event),
+						zap.Error(info.Error),
+					)
+				}
+			}
+		}
+	}
+	if details&trace.DriverConnEvents != 0 {
+		l := l.Named("conn")
 		t.OnConnTake = func(info trace.ConnTakeStartInfo) func(trace.ConnTakeDoneInfo) {
 			endpoint := info.Endpoint
 			l.Debug("try to take conn",
@@ -183,34 +214,6 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 					zap.Bool("dataCenter", endpoint.LocalDC()),
 					zap.String("state after", info.State.String()),
 				)
-			}
-		}
-		t.OnRepeaterWakeUp = func(info trace.RepeaterTickStartInfo) func(trace.RepeaterTickDoneInfo) {
-			name := info.Name
-			event := info.Event
-			l.Info("repeater wake up",
-				zap.String("version", version),
-				zap.String("name", name),
-				zap.String("event", event),
-			)
-			start := time.Now()
-			return func(info trace.RepeaterTickDoneInfo) {
-				if info.Error == nil {
-					l.Info("repeater wake up done",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.String("name", name),
-						zap.String("event", event),
-					)
-				} else {
-					l.Info("repeater wake up fail",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.String("name", name),
-						zap.String("event", event),
-						zap.Error(info.Error),
-					)
-				}
 			}
 		}
 		t.OnConnInvoke = func(info trace.ConnInvokeStartInfo) func(trace.ConnInvokeDoneInfo) {
@@ -308,6 +311,72 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 							zap.Error(info.Error),
 						)
 					}
+				}
+			}
+		}
+		t.OnConnPark = func(info trace.ConnParkStartInfo) func(trace.ConnParkDoneInfo) {
+			endpoint := info.Endpoint
+			l.Debug("try to park",
+				zap.String("version", version),
+				zap.String("address", endpoint.Address()),
+				zap.Time("lastUpdated", endpoint.LastUpdated()),
+				zap.String("location", endpoint.Location()),
+				zap.Bool("dataCenter", endpoint.LocalDC()),
+			)
+			start := time.Now()
+			return func(info trace.ConnParkDoneInfo) {
+				if info.Error == nil {
+					l.Debug("parked",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.String("address", endpoint.Address()),
+						zap.Time("lastUpdated", endpoint.LastUpdated()),
+						zap.String("location", endpoint.Location()),
+						zap.Bool("dataCenter", endpoint.LocalDC()),
+					)
+				} else {
+					l.Warn("park failed",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.String("address", endpoint.Address()),
+						zap.Time("lastUpdated", endpoint.LastUpdated()),
+						zap.String("location", endpoint.Location()),
+						zap.Bool("dataCenter", endpoint.LocalDC()),
+						zap.Error(info.Error),
+					)
+				}
+			}
+		}
+		t.OnConnClose = func(info trace.ConnCloseStartInfo) func(trace.ConnCloseDoneInfo) {
+			endpoint := info.Endpoint
+			l.Debug("try to close",
+				zap.String("version", version),
+				zap.String("address", endpoint.Address()),
+				zap.Time("lastUpdated", endpoint.LastUpdated()),
+				zap.String("location", endpoint.Location()),
+				zap.Bool("dataCenter", endpoint.LocalDC()),
+			)
+			start := time.Now()
+			return func(info trace.ConnCloseDoneInfo) {
+				if info.Error == nil {
+					l.Debug("closed",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.String("address", endpoint.Address()),
+						zap.Time("lastUpdated", endpoint.LastUpdated()),
+						zap.String("location", endpoint.Location()),
+						zap.Bool("dataCenter", endpoint.LocalDC()),
+					)
+				} else {
+					l.Warn("close failed",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.String("address", endpoint.Address()),
+						zap.Time("lastUpdated", endpoint.LastUpdated()),
+						zap.String("location", endpoint.Location()),
+						zap.Bool("dataCenter", endpoint.LocalDC()),
+						zap.Error(info.Error),
+					)
 				}
 			}
 		}
