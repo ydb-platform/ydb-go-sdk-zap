@@ -467,12 +467,12 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 	if details&trace.TablePoolEvents != 0 {
 		log := log.Named("pool")
 		if details&trace.TablePoolLifeCycleEvents != 0 {
-			t.OnPoolInit = func(info trace.PoolInitStartInfo) func(trace.PoolInitDoneInfo) {
+			t.OnInit = func(info trace.TableInitStartInfo) func(trace.TableInitDoneInfo) {
 				log.Info("initializing",
 					zap.String("version", version),
 				)
 				start := time.Now()
-				return func(info trace.PoolInitDoneInfo) {
+				return func(info trace.TableInitDoneInfo) {
 					log.Info("initialized",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
@@ -481,12 +481,12 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					)
 				}
 			}
-			t.OnPoolClose = func(info trace.PoolCloseStartInfo) func(trace.PoolCloseDoneInfo) {
+			t.OnClose = func(info trace.TableCloseStartInfo) func(trace.TableCloseDoneInfo) {
 				log.Info("closing",
 					zap.String("version", version),
 				)
 				start := time.Now()
-				return func(info trace.PoolCloseDoneInfo) {
+				return func(info trace.TableCloseDoneInfo) {
 					if info.Error == nil {
 						log.Info("closed",
 							zap.String("version", version),
