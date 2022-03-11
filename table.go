@@ -12,6 +12,42 @@ import (
 func Table(log *zap.Logger, details trace.Details) trace.Table {
 	log = log.Named("ydb").Named("table")
 	t := trace.Table{}
+	if details&trace.TableEvents != 0 {
+		t.OnInit = func(info trace.TableInitStartInfo) func(trace.TableInitDoneInfo) {
+			log.Info("initializing",
+				zap.String("version", version),
+			)
+			start := time.Now()
+			return func(info trace.TableInitDoneInfo) {
+				log.Info("initialized",
+					zap.String("version", version),
+					zap.Duration("latency", time.Since(start)),
+					zap.Int("minSize", info.KeepAliveMinSize),
+					zap.Int("maxSize", info.Limit),
+				)
+			}
+		}
+		t.OnClose = func(info trace.TableCloseStartInfo) func(trace.TableCloseDoneInfo) {
+			log.Info("closing",
+				zap.String("version", version),
+			)
+			start := time.Now()
+			return func(info trace.TableCloseDoneInfo) {
+				if info.Error == nil {
+					log.Info("closed",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+					)
+				} else {
+					log.Error("close failed",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.Error(info.Error),
+					)
+				}
+			}
+		}
+	}
 	if details&trace.TablePoolRetryEvents != 0 {
 		log := log.Named("retry")
 		do := log.Named("do")
@@ -466,42 +502,6 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 	}
 	if details&trace.TablePoolEvents != 0 {
 		log := log.Named("pool")
-		if details&trace.TablePoolLifeCycleEvents != 0 {
-			t.OnInit = func(info trace.TableInitStartInfo) func(trace.TableInitDoneInfo) {
-				log.Info("initializing",
-					zap.String("version", version),
-				)
-				start := time.Now()
-				return func(info trace.TableInitDoneInfo) {
-					log.Info("initialized",
-						zap.String("version", version),
-						zap.Duration("latency", time.Since(start)),
-						zap.Int("minSize", info.KeepAliveMinSize),
-						zap.Int("maxSize", info.Limit),
-					)
-				}
-			}
-			t.OnClose = func(info trace.TableCloseStartInfo) func(trace.TableCloseDoneInfo) {
-				log.Info("closing",
-					zap.String("version", version),
-				)
-				start := time.Now()
-				return func(info trace.TableCloseDoneInfo) {
-					if info.Error == nil {
-						log.Info("closed",
-							zap.String("version", version),
-							zap.Duration("latency", time.Since(start)),
-						)
-					} else {
-						log.Error("close failed",
-							zap.String("version", version),
-							zap.Duration("latency", time.Since(start)),
-							zap.Error(info.Error),
-						)
-					}
-				}
-			}
-		}
 		if details&trace.TablePoolSessionLifeCycleEvents != 0 {
 			log := log.Named("session")
 			t.OnPoolSessionNew = func(info trace.PoolSessionNewStartInfo) func(trace.PoolSessionNewDoneInfo) {
