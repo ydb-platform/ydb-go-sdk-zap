@@ -10,7 +10,7 @@ import (
 
 func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
 	if details&trace.DiscoveryEvents != 0 {
-		log = log.Named("discovery")
+		log = log.Named("ydb").Named("discovery")
 		t.OnDiscover = func(info trace.DiscoverStartInfo) func(trace.DiscoverDoneInfo) {
 			log.Info("try to discover",
 				zap.String("version", version),
