@@ -12,8 +12,12 @@ func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
 	if details&trace.DiscoveryEvents != 0 {
 		log = log.Named("ydb").Named("discovery")
 		t.OnDiscover = func(info trace.DiscoverStartInfo) func(trace.DiscoverDoneInfo) {
+			address := info.Address
+			database := info.Database
 			log.Info("try to discover",
 				zap.String("version", version),
+				zap.String("address", address),
+				zap.String("database", database),
 			)
 			start := time.Now()
 			return func(info trace.DiscoverDoneInfo) {
@@ -24,12 +28,16 @@ func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
 					}
 					log.Info("discover finished",
 						zap.String("version", version),
+						zap.String("address", address),
+						zap.String("database", database),
 						zap.Duration("latency", time.Since(start)),
 						zap.Strings("endpoints", endpoints),
 					)
 				} else {
 					log.Error("discover failed",
 						zap.String("version", version),
+						zap.String("address", address),
+						zap.String("database", database),
 						zap.Duration("latency", time.Since(start)),
 						zap.Error(info.Error),
 					)
