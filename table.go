@@ -48,17 +48,55 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 			}
 		}
 	}
-	if details&trace.TablePoolRetryEvents != 0 {
-		log := log.Named("retry")
+	if details&trace.TableEvents != 0 {
 		do := log.Named("do")
 		doTx := log.Named("doTx")
-		t.OnPoolDo = func(info trace.PoolDoStartInfo) func(info trace.PoolDoIntermediateInfo) func(trace.PoolDoDoneInfo) {
+		createSession := log.Named("createSession")
+		t.OnCreateSession = func(info trace.TableCreateSessionStartInfo) func(info trace.TableCreateSessionIntermediateInfo) func(trace.TableCreateSessionDoneInfo) {
+			createSession.Debug("init",
+				zap.String("version", version),
+			)
+			start := time.Now()
+			return func(info trace.TableCreateSessionIntermediateInfo) func(trace.TableCreateSessionDoneInfo) {
+				if info.Error == nil {
+					do.Debug("intermediate",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+					)
+				} else {
+					do.Warn("intermediate",
+						zap.String("version", version),
+						zap.Duration("latency", time.Since(start)),
+						zap.Error(info.Error),
+					)
+				}
+				return func(info trace.TableCreateSessionDoneInfo) {
+					if info.Error == nil {
+						do.Debug("finish",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Int("attempts", info.Attempts),
+							zap.String("id", info.Session.ID()),
+							zap.String("status", info.Session.Status()),
+						)
+					} else {
+						do.Error("finish",
+							zap.String("version", version),
+							zap.Duration("latency", time.Since(start)),
+							zap.Int("attempts", info.Attempts),
+							zap.Error(info.Error),
+						)
+					}
+				}
+			}
+		}
+		t.OnDo = func(info trace.TableDoStartInfo) func(info trace.TableDoIntermediateInfo) func(trace.TableDoDoneInfo) {
 			idempotent := info.Idempotent
 			do.Debug("init",
 				zap.String("version", version),
 				zap.Bool("idempotent", idempotent))
 			start := time.Now()
-			return func(info trace.PoolDoIntermediateInfo) func(trace.PoolDoDoneInfo) {
+			return func(info trace.TableDoIntermediateInfo) func(trace.TableDoDoneInfo) {
 				if info.Error == nil {
 					do.Debug("intermediate",
 						zap.String("version", version),
@@ -73,7 +111,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.Error(info.Error),
 					)
 				}
-				return func(info trace.PoolDoDoneInfo) {
+				return func(info trace.TableDoDoneInfo) {
 					if info.Error == nil {
 						do.Debug("finish",
 							zap.String("version", version),
@@ -93,13 +131,13 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 				}
 			}
 		}
-		t.OnPoolDoTx = func(info trace.PoolDoTxStartInfo) func(info trace.PoolDoTxIntermediateInfo) func(trace.PoolDoTxDoneInfo) {
+		t.OnDoTx = func(info trace.TableDoTxStartInfo) func(info trace.TableDoTxIntermediateInfo) func(trace.TableDoTxDoneInfo) {
 			idempotent := info.Idempotent
 			doTx.Debug("init",
 				zap.String("version", version),
 				zap.Bool("idempotent", idempotent))
 			start := time.Now()
-			return func(info trace.PoolDoTxIntermediateInfo) func(trace.PoolDoTxDoneInfo) {
+			return func(info trace.TableDoTxIntermediateInfo) func(trace.TableDoTxDoneInfo) {
 				if info.Error == nil {
 					doTx.Debug("intermediate",
 						zap.String("version", version),
@@ -114,7 +152,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.Error(info.Error),
 					)
 				}
-				return func(info trace.PoolDoTxDoneInfo) {
+				return func(info trace.TableDoTxDoneInfo) {
 					if info.Error == nil {
 						doTx.Debug("finish",
 							zap.String("version", version),
@@ -138,17 +176,18 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 	if details&trace.TableSessionEvents != 0 {
 		log := log.Named("session")
 		if details&trace.TableSessionLifeCycleEvents != 0 {
-			t.OnSessionNew = func(info trace.SessionNewStartInfo) func(trace.SessionNewDoneInfo) {
+			t.OnSessionNew = func(info trace.TableSessionNewStartInfo) func(trace.TableSessionNewDoneInfo) {
 				log.Debug("try to create",
 					zap.String("version", version),
 				)
 				start := time.Now()
-				return func(info trace.SessionNewDoneInfo) {
+				return func(info trace.TableSessionNewDoneInfo) {
 					if info.Error == nil {
 						log.Info("created",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.String("id", info.Session.ID()),
+							zap.String("status", info.Session.Status()),
 						)
 					} else {
 						log.Error("create failed",
@@ -159,7 +198,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					}
 				}
 			}
-			t.OnSessionDelete = func(info trace.SessionDeleteStartInfo) func(trace.SessionDeleteDoneInfo) {
+			t.OnSessionDelete = func(info trace.TableSessionDeleteStartInfo) func(trace.TableSessionDeleteDoneInfo) {
 				session := info.Session
 				log.Debug("try to delete",
 					zap.String("version", version),
@@ -167,7 +206,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					zap.String("status", session.Status()),
 				)
 				start := time.Now()
-				return func(info trace.SessionDeleteDoneInfo) {
+				return func(info trace.TableSessionDeleteDoneInfo) {
 					if info.Error == nil {
 						log.Debug("deleted",
 							zap.String("version", version),
@@ -186,7 +225,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					}
 				}
 			}
-			t.OnSessionKeepAlive = func(info trace.KeepAliveStartInfo) func(trace.KeepAliveDoneInfo) {
+			t.OnSessionKeepAlive = func(info trace.TableKeepAliveStartInfo) func(trace.TableKeepAliveDoneInfo) {
 				session := info.Session
 				log.Debug("keep-aliving",
 					zap.String("version", version),
@@ -194,7 +233,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					zap.String("status", session.Status()),
 				)
 				start := time.Now()
-				return func(info trace.KeepAliveDoneInfo) {
+				return func(info trace.TableKeepAliveDoneInfo) {
 					if info.Error == nil {
 						log.Debug("keep-alived",
 							zap.String("version", version),
@@ -219,9 +258,9 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 			if details&trace.TableSessionQueryInvokeEvents != 0 {
 				log := log.Named("invoke")
 				t.OnSessionQueryPrepare = func(
-					info trace.PrepareDataQueryStartInfo,
+					info trace.TablePrepareDataQueryStartInfo,
 				) func(
-					trace.PrepareDataQueryDoneInfo,
+					trace.TablePrepareDataQueryDoneInfo,
 				) {
 					session := info.Session
 					query := info.Query
@@ -232,7 +271,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.String("query", query),
 					)
 					start := time.Now()
-					return func(info trace.PrepareDataQueryDoneInfo) {
+					return func(info trace.TablePrepareDataQueryDoneInfo) {
 						if info.Error == nil {
 							log.Debug(
 								"prepared",
@@ -257,9 +296,9 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					}
 				}
 				t.OnSessionQueryExecute = func(
-					info trace.ExecuteDataQueryStartInfo,
+					info trace.TableExecuteDataQueryStartInfo,
 				) func(
-					trace.ExecuteDataQueryDoneInfo,
+					trace.TableExecuteDataQueryDoneInfo,
 				) {
 					session := info.Session
 					query := info.Query
@@ -272,7 +311,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.String("params", params.String()),
 					)
 					start := time.Now()
-					return func(info trace.ExecuteDataQueryDoneInfo) {
+					return func(info trace.TableExecuteDataQueryDoneInfo) {
 						if info.Error == nil {
 							tx := info.Tx
 							log.Debug("executed",
@@ -304,11 +343,11 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 			if details&trace.TableSessionQueryStreamEvents != 0 {
 				log := log.Named("stream")
 				t.OnSessionQueryStreamExecute = func(
-					info trace.SessionQueryStreamExecuteStartInfo,
+					info trace.TableSessionQueryStreamExecuteStartInfo,
 				) func(
-					intermediateInfo trace.SessionQueryStreamExecuteIntermediateInfo,
+					intermediateInfo trace.TableSessionQueryStreamExecuteIntermediateInfo,
 				) func(
-					trace.SessionQueryStreamExecuteDoneInfo,
+					trace.TableSessionQueryStreamExecuteDoneInfo,
 				) {
 					session := info.Session
 					query := info.Query
@@ -322,9 +361,9 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					)
 					start := time.Now()
 					return func(
-						info trace.SessionQueryStreamExecuteIntermediateInfo,
+						info trace.TableSessionQueryStreamExecuteIntermediateInfo,
 					) func(
-						trace.SessionQueryStreamExecuteDoneInfo,
+						trace.TableSessionQueryStreamExecuteDoneInfo,
 					) {
 						if info.Error == nil {
 							log.Debug(`intermediate`)
@@ -333,7 +372,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 								zap.Error(info.Error),
 							)
 						}
-						return func(info trace.SessionQueryStreamExecuteDoneInfo) {
+						return func(info trace.TableSessionQueryStreamExecuteDoneInfo) {
 							if info.Error == nil {
 								log.Debug("executed",
 									zap.String("version", version),
@@ -359,11 +398,11 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					}
 				}
 				t.OnSessionQueryStreamRead = func(
-					info trace.SessionQueryStreamReadStartInfo,
+					info trace.TableSessionQueryStreamReadStartInfo,
 				) func(
-					trace.SessionQueryStreamReadIntermediateInfo,
+					trace.TableSessionQueryStreamReadIntermediateInfo,
 				) func(
-					trace.SessionQueryStreamReadDoneInfo,
+					trace.TableSessionQueryStreamReadDoneInfo,
 				) {
 					session := info.Session
 					log.Debug("reading",
@@ -373,9 +412,9 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					)
 					start := time.Now()
 					return func(
-						info trace.SessionQueryStreamReadIntermediateInfo,
+						info trace.TableSessionQueryStreamReadIntermediateInfo,
 					) func(
-						trace.SessionQueryStreamReadDoneInfo,
+						trace.TableSessionQueryStreamReadDoneInfo,
 					) {
 						if info.Error == nil {
 							log.Debug(`intermediate`)
@@ -384,7 +423,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 								zap.Error(info.Error),
 							)
 						}
-						return func(info trace.SessionQueryStreamReadDoneInfo) {
+						return func(info trace.TableSessionQueryStreamReadDoneInfo) {
 							if info.Error == nil {
 								log.Debug("read",
 									zap.String("version", version),
@@ -408,7 +447,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 		}
 		if details&trace.TableSessionTransactionEvents != 0 {
 			log := log.Named("transaction")
-			t.OnSessionTransactionBegin = func(info trace.SessionTransactionBeginStartInfo) func(trace.SessionTransactionBeginDoneInfo) {
+			t.OnSessionTransactionBegin = func(info trace.TableSessionTransactionBeginStartInfo) func(trace.TableSessionTransactionBeginDoneInfo) {
 				session := info.Session
 				log.Debug("beginning",
 					zap.String("version", version),
@@ -416,7 +455,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					zap.String("status", session.Status()),
 				)
 				start := time.Now()
-				return func(info trace.SessionTransactionBeginDoneInfo) {
+				return func(info trace.TableSessionTransactionBeginDoneInfo) {
 					if info.Error == nil {
 						log.Debug("began",
 							zap.String("version", version),
@@ -436,7 +475,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					}
 				}
 			}
-			t.OnSessionTransactionCommit = func(info trace.SessionTransactionCommitStartInfo) func(trace.SessionTransactionCommitDoneInfo) {
+			t.OnSessionTransactionCommit = func(info trace.TableSessionTransactionCommitStartInfo) func(trace.TableSessionTransactionCommitDoneInfo) {
 				session := info.Session
 				tx := info.Tx
 				log.Debug("committing",
@@ -446,7 +485,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					zap.String("tx", tx.ID()),
 				)
 				start := time.Now()
-				return func(info trace.SessionTransactionCommitDoneInfo) {
+				return func(info trace.TableSessionTransactionCommitDoneInfo) {
 					if info.Error == nil {
 						log.Debug("committed",
 							zap.String("version", version),
@@ -467,7 +506,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					}
 				}
 			}
-			t.OnSessionTransactionRollback = func(info trace.SessionTransactionRollbackStartInfo) func(trace.SessionTransactionRollbackDoneInfo) {
+			t.OnSessionTransactionRollback = func(info trace.TableSessionTransactionRollbackStartInfo) func(trace.TableSessionTransactionRollbackDoneInfo) {
 				session := info.Session
 				tx := info.Tx
 				log.Debug("try to rollback",
@@ -477,7 +516,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					zap.String("tx", tx.ID()),
 				)
 				start := time.Now()
-				return func(info trace.SessionTransactionRollbackDoneInfo) {
+				return func(info trace.TableSessionTransactionRollbackDoneInfo) {
 					if info.Error == nil {
 						log.Debug("rollback done",
 							zap.String("version", version),
@@ -504,12 +543,12 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 		log := log.Named("pool")
 		if details&trace.TablePoolSessionLifeCycleEvents != 0 {
 			log := log.Named("session")
-			t.OnPoolSessionNew = func(info trace.PoolSessionNewStartInfo) func(trace.PoolSessionNewDoneInfo) {
+			t.OnPoolSessionNew = func(info trace.TablePoolSessionNewStartInfo) func(trace.TablePoolSessionNewDoneInfo) {
 				log.Debug("try to create",
 					zap.String("version", version),
 				)
 				start := time.Now()
-				return func(info trace.PoolSessionNewDoneInfo) {
+				return func(info trace.TablePoolSessionNewDoneInfo) {
 					if info.Error == nil {
 						session := info.Session
 						log.Debug("created",
@@ -526,7 +565,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					}
 				}
 			}
-			t.OnPoolSessionClose = func(info trace.PoolSessionCloseStartInfo) func(trace.PoolSessionCloseDoneInfo) {
+			t.OnPoolSessionClose = func(info trace.TablePoolSessionCloseStartInfo) func(trace.TablePoolSessionCloseDoneInfo) {
 				session := info.Session
 				log.Debug("closing",
 					zap.String("version", version),
@@ -534,7 +573,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					zap.String("status", session.Status()),
 				)
 				start := time.Now()
-				return func(info trace.PoolSessionCloseDoneInfo) {
+				return func(info trace.TablePoolSessionCloseDoneInfo) {
 					log.Debug("closed",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
@@ -543,7 +582,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					)
 				}
 			}
-			t.OnPoolStateChange = func(info trace.PooStateChangeInfo) {
+			t.OnPoolStateChange = func(info trace.TablePooStateChangeInfo) {
 				log.Info("change",
 					zap.String("version", version),
 					zap.Int("size", info.Size),
@@ -552,7 +591,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 			}
 		}
 		if details&trace.TablePoolAPIEvents != 0 {
-			t.OnPoolPut = func(info trace.PoolPutStartInfo) func(trace.PoolPutDoneInfo) {
+			t.OnPoolPut = func(info trace.TablePoolPutStartInfo) func(trace.TablePoolPutDoneInfo) {
 				session := info.Session
 				log.Debug("putting",
 					zap.String("version", version),
@@ -560,7 +599,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					zap.String("status", session.Status()),
 				)
 				start := time.Now()
-				return func(info trace.PoolPutDoneInfo) {
+				return func(info trace.TablePoolPutDoneInfo) {
 					if info.Error == nil {
 						log.Debug("put",
 							zap.String("version", version),
@@ -579,12 +618,12 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					}
 				}
 			}
-			t.OnPoolGet = func(info trace.PoolGetStartInfo) func(trace.PoolGetDoneInfo) {
+			t.OnPoolGet = func(info trace.TablePoolGetStartInfo) func(trace.TablePoolGetDoneInfo) {
 				log.Debug("getting",
 					zap.String("version", version),
 				)
 				start := time.Now()
-				return func(info trace.PoolGetDoneInfo) {
+				return func(info trace.TablePoolGetDoneInfo) {
 					if info.Error == nil {
 						session := info.Session
 						log.Debug("got",
@@ -604,12 +643,12 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					}
 				}
 			}
-			t.OnPoolWait = func(info trace.PoolWaitStartInfo) func(trace.PoolWaitDoneInfo) {
+			t.OnPoolWait = func(info trace.TablePoolWaitStartInfo) func(trace.TablePoolWaitDoneInfo) {
 				log.Debug("waiting",
 					zap.String("version", version),
 				)
 				start := time.Now()
-				return func(info trace.PoolWaitDoneInfo) {
+				return func(info trace.TablePoolWaitDoneInfo) {
 					if info.Error == nil {
 						if info.Session == nil {
 							log.Debug(`wait done without any significant result`,

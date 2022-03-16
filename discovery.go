@@ -11,7 +11,7 @@ import (
 func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
 	if details&trace.DiscoveryEvents != 0 {
 		log = log.Named("ydb").Named("discovery")
-		t.OnDiscover = func(info trace.DiscoverStartInfo) func(trace.DiscoverDoneInfo) {
+		t.OnDiscover = func(info trace.DiscoveryDiscoverStartInfo) func(trace.DiscoveryDiscoverDoneInfo) {
 			address := info.Address
 			database := info.Database
 			log.Info("try to discover",
@@ -20,7 +20,7 @@ func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
 				zap.String("database", database),
 			)
 			start := time.Now()
-			return func(info trace.DiscoverDoneInfo) {
+			return func(info trace.DiscoveryDiscoverDoneInfo) {
 				if info.Error == nil {
 					endpoints := make([]string, 0, len(info.Endpoints))
 					for _, e := range info.Endpoints {

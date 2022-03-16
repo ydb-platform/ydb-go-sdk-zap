@@ -57,11 +57,12 @@ func main() {
 		ctx,
 		ydb.WithConnectionString(os.Getenv("YDB_CONNECTION_STRING")),
 		ydb.WithDialTimeout(5*time.Second),
-		ydb.WithBalancer(balancers.RandomChoice()),
+		ydb.WithBalancer(balancers.PreferLocations(balancers.RandomChoice(), "MAN")),
 		creds,
 		ydb.WithSessionPoolSizeLimit(300),
 		ydb.WithSessionPoolIdleThreshold(time.Second*5),
-		ydbZap.WithTraces(log, trace.DetailsAll),
+		ydb.WithDiscoveryInterval(5*time.Second),
+		ydbZap.WithTraces(log, trace.DiscoveryEvents|trace.DriverRepeaterEvents),
 	)
 	if err != nil {
 		panic(err)
@@ -109,6 +110,16 @@ func main() {
 }
 
 func upsertData(ctx context.Context, c table.Client, prefix, tableName string, concurrency int) (err error) {
+	err = c.Do(
+		ctx,
+		func(ctx context.Context, s table.Session) (err error) {
+			return s.DropTable(ctx, path.Join(prefix, tableName))
+		},
+	)
+	if err != nil {
+		log.Warn("drop table", zap.Error(err))
+	}
+
 	err = c.Do(
 		ctx,
 		func(ctx context.Context, s table.Session) (err error) {
