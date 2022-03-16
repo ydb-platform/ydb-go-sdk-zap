@@ -59,12 +59,12 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 			start := time.Now()
 			return func(info trace.TableCreateSessionIntermediateInfo) func(trace.TableCreateSessionDoneInfo) {
 				if info.Error == nil {
-					do.Debug("intermediate",
+					createSession.Debug("intermediate",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 					)
 				} else {
-					do.Warn("intermediate",
+					createSession.Warn("intermediate",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Error(info.Error),
@@ -72,7 +72,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 				}
 				return func(info trace.TableCreateSessionDoneInfo) {
 					if info.Error == nil {
-						do.Debug("finish",
+						createSession.Debug("finish",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Int("attempts", info.Attempts),
@@ -80,7 +80,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 							zap.String("status", info.Session.Status()),
 						)
 					} else {
-						do.Error("finish",
+						createSession.Error("finish",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Int("attempts", info.Attempts),
