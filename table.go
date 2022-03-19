@@ -1,6 +1,7 @@
 package zap
 
 import (
+	"github.com/ydb-platform/ydb-go-sdk/v3/retry"
 	"time"
 
 	"go.uber.org/zap"
@@ -98,16 +99,24 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 			start := time.Now()
 			return func(info trace.TableDoIntermediateInfo) func(trace.TableDoDoneInfo) {
 				if info.Error == nil {
-					do.Debug("intermediate",
+					do.Debug("attempt",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
 					)
 				} else {
-					do.Warn("intermediate",
+					log := do.Warn
+					m := retry.Check(info.Error)
+					if m.StatusCode() < 0 {
+						log = do.Debug
+					}
+					log("intermediate",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
+						zap.Bool("retryable", m.MustRetry(idempotent)),
+						zap.Bool("deleteSession", m.MustDeleteSession()),
+						zap.Int32("code", m.StatusCode()),
 						zap.Error(info.Error),
 					)
 				}
@@ -120,11 +129,18 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 							zap.Int("attempts", info.Attempts),
 						)
 					} else {
-						do.Error("finish",
+						log := do.Error
+						m := retry.Check(info.Error)
+						if m.StatusCode() < 0 {
+							log = do.Debug
+						}
+						log("done",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Bool("idempotent", idempotent),
-							zap.Int("attempts", info.Attempts),
+							zap.Bool("retryable", m.MustRetry(idempotent)),
+							zap.Bool("deleteSession", m.MustDeleteSession()),
+							zap.Int32("code", m.StatusCode()),
 							zap.Error(info.Error),
 						)
 					}
@@ -139,16 +155,24 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 			start := time.Now()
 			return func(info trace.TableDoTxIntermediateInfo) func(trace.TableDoTxDoneInfo) {
 				if info.Error == nil {
-					doTx.Debug("intermediate",
+					doTx.Debug("attempt",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
 					)
 				} else {
-					doTx.Warn("intermediate",
+					log := doTx.Warn
+					m := retry.Check(info.Error)
+					if m.StatusCode() < 0 {
+						log = doTx.Debug
+					}
+					log("intermediate",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
+						zap.Bool("retryable", m.MustRetry(idempotent)),
+						zap.Bool("deleteSession", m.MustDeleteSession()),
+						zap.Int32("code", m.StatusCode()),
 						zap.Error(info.Error),
 					)
 				}
@@ -161,11 +185,18 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 							zap.Int("attempts", info.Attempts),
 						)
 					} else {
-						doTx.Error("finish",
+						log := doTx.Error
+						m := retry.Check(info.Error)
+						if m.StatusCode() < 0 {
+							log = doTx.Debug
+						}
+						log("done",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Bool("idempotent", idempotent),
-							zap.Int("attempts", info.Attempts),
+							zap.Bool("retryable", m.MustRetry(idempotent)),
+							zap.Bool("deleteSession", m.MustDeleteSession()),
+							zap.Int32("code", m.StatusCode()),
 							zap.Error(info.Error),
 						)
 					}
