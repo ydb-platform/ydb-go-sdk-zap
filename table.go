@@ -116,7 +116,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.Bool("idempotent", idempotent),
 						zap.Bool("retryable", m.MustRetry(idempotent)),
 						zap.Bool("deleteSession", m.MustDeleteSession()),
-						zap.Int32("code", m.StatusCode()),
+						zap.Int64("code", m.StatusCode()),
 						zap.Error(info.Error),
 					)
 				}
@@ -140,7 +140,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 							zap.Bool("idempotent", idempotent),
 							zap.Bool("retryable", m.MustRetry(idempotent)),
 							zap.Bool("deleteSession", m.MustDeleteSession()),
-							zap.Int32("code", m.StatusCode()),
+							zap.Int64("code", m.StatusCode()),
 							zap.Error(info.Error),
 						)
 					}
@@ -172,7 +172,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.Bool("idempotent", idempotent),
 						zap.Bool("retryable", m.MustRetry(idempotent)),
 						zap.Bool("deleteSession", m.MustDeleteSession()),
-						zap.Int32("code", m.StatusCode()),
+						zap.Int64("code", m.StatusCode()),
 						zap.Error(info.Error),
 					)
 				}
@@ -196,7 +196,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 							zap.Bool("idempotent", idempotent),
 							zap.Bool("retryable", m.MustRetry(idempotent)),
 							zap.Bool("deleteSession", m.MustDeleteSession()),
-							zap.Int32("code", m.StatusCode()),
+							zap.Int64("code", m.StatusCode()),
 							zap.Error(info.Error),
 						)
 					}

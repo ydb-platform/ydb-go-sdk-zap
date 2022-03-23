@@ -36,7 +36,7 @@ func Retry(log *zap.Logger, details trace.Details) (t trace.Retry) {
 						zap.Bool("idempotent", idempotent),
 						zap.Bool("retryable", m.MustRetry(idempotent)),
 						zap.Bool("deleteSession", m.MustDeleteSession()),
-						zap.Int32("code", m.StatusCode()),
+						zap.Int64("code", m.StatusCode()),
 						zap.Error(info.Error),
 					)
 				}
@@ -60,7 +60,7 @@ func Retry(log *zap.Logger, details trace.Details) (t trace.Retry) {
 							zap.Bool("idempotent", idempotent),
 							zap.Bool("retryable", m.MustRetry(idempotent)),
 							zap.Bool("deleteSession", m.MustDeleteSession()),
-							zap.Int32("code", m.StatusCode()),
+							zap.Int64("code", m.StatusCode()),
 							zap.Error(info.Error),
 						)
 					}
