@@ -107,7 +107,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					)
 				} else {
 					f := do.Warn
-					if ydb.IsYdbError(info.Error) {
+					if !ydb.IsYdbError(info.Error) {
 						f = do.Debug
 					}
 					m := retry.Check(info.Error)
@@ -131,7 +131,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						)
 					} else {
 						f := do.Error
-						if ydb.IsYdbError(info.Error) {
+						if !ydb.IsYdbError(info.Error) {
 							f = do.Debug
 						}
 						m := retry.Check(info.Error)
@@ -163,7 +163,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					)
 				} else {
 					f := doTx.Warn
-					if ydb.IsYdbError(info.Error) {
+					if !ydb.IsYdbError(info.Error) {
 						f = doTx.Debug
 					}
 					m := retry.Check(info.Error)
@@ -187,7 +187,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						)
 					} else {
 						f := doTx.Error
-						if ydb.IsYdbError(info.Error) {
+						if !ydb.IsYdbError(info.Error) {
 							f = doTx.Debug
 						}
 						m := retry.Check(info.Error)

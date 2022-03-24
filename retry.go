@@ -27,7 +27,7 @@ func Retry(log *zap.Logger, details trace.Details) (t trace.Retry) {
 					)
 				} else {
 					f := retry.Warn
-					if ydb.IsYdbError(info.Error) {
+					if !ydb.IsYdbError(info.Error) {
 						f = retry.Debug
 					}
 					m := ydbRetry.Check(info.Error)
@@ -51,7 +51,7 @@ func Retry(log *zap.Logger, details trace.Details) (t trace.Retry) {
 						)
 					} else {
 						f := retry.Error
-						if ydb.IsYdbError(info.Error) {
+						if !ydb.IsYdbError(info.Error) {
 							f = retry.Debug
 						}
 						m := ydbRetry.Check(info.Error)
