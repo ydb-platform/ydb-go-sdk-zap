@@ -1,6 +1,7 @@
 package zap
 
 import (
+	"github.com/ydb-platform/ydb-go-sdk/v3"
 	"github.com/ydb-platform/ydb-go-sdk/v3/retry"
 	"time"
 
@@ -105,12 +106,12 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.Bool("idempotent", idempotent),
 					)
 				} else {
-					log := do.Warn
-					m := retry.Check(info.Error)
-					if m.StatusCode() < 0 {
-						log = do.Debug
+					f := do.Warn
+					if ydb.IsYdbError(info.Error) {
+						f = do.Debug
 					}
-					log("intermediate",
+					m := retry.Check(info.Error)
+					f("intermediate",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
@@ -129,12 +130,12 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 							zap.Int("attempts", info.Attempts),
 						)
 					} else {
-						log := do.Error
-						m := retry.Check(info.Error)
-						if m.StatusCode() < 0 {
-							log = do.Debug
+						f := do.Error
+						if ydb.IsYdbError(info.Error) {
+							f = do.Debug
 						}
-						log("done",
+						m := retry.Check(info.Error)
+						f("done",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Bool("idempotent", idempotent),
@@ -161,12 +162,12 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						zap.Bool("idempotent", idempotent),
 					)
 				} else {
-					log := doTx.Warn
-					m := retry.Check(info.Error)
-					if m.StatusCode() < 0 {
-						log = doTx.Debug
+					f := doTx.Warn
+					if ydb.IsYdbError(info.Error) {
+						f = doTx.Debug
 					}
-					log("intermediate",
+					m := retry.Check(info.Error)
+					f("intermediate",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
@@ -185,12 +186,12 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 							zap.Int("attempts", info.Attempts),
 						)
 					} else {
-						log := doTx.Error
-						m := retry.Check(info.Error)
-						if m.StatusCode() < 0 {
-							log = doTx.Debug
+						f := doTx.Error
+						if ydb.IsYdbError(info.Error) {
+							f = doTx.Debug
 						}
-						log("done",
+						m := retry.Check(info.Error)
+						f("done",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Bool("idempotent", idempotent),

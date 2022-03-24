@@ -1,6 +1,7 @@
 package zap
 
 import (
+	"github.com/ydb-platform/ydb-go-sdk/v3"
 	"go.uber.org/zap"
 	"time"
 
@@ -25,12 +26,12 @@ func Retry(log *zap.Logger, details trace.Details) (t trace.Retry) {
 						zap.Bool("idempotent", idempotent),
 					)
 				} else {
-					log := retry.Warn
-					m := ydbRetry.Check(info.Error)
-					if m.StatusCode() < 0 {
-						log = retry.Debug
+					f := retry.Warn
+					if ydb.IsYdbError(info.Error) {
+						f = retry.Debug
 					}
-					log("intermediate",
+					m := ydbRetry.Check(info.Error)
+					f("intermediate",
 						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
@@ -49,12 +50,12 @@ func Retry(log *zap.Logger, details trace.Details) (t trace.Retry) {
 							zap.Int("attempts", info.Attempts),
 						)
 					} else {
-						log := retry.Error
-						m := ydbRetry.Check(info.Error)
-						if m.StatusCode() < 0 {
-							log = retry.Debug
+						f := retry.Error
+						if ydb.IsYdbError(info.Error) {
+							f = retry.Debug
 						}
-						log("done",
+						m := ydbRetry.Check(info.Error)
+						f("done",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Bool("idempotent", idempotent),

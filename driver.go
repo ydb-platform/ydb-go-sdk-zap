@@ -481,28 +481,6 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 				)
 			}
 		}
-		t.OnClusterUpdate = func(info trace.DriverClusterUpdateStartInfo) func(trace.DriverClusterUpdateDoneInfo) {
-			endpoint := info.Endpoint
-			l.Debug("updating",
-				zap.String("version", version),
-				zap.String("address", endpoint.Address()),
-				zap.Time("lastUpdated", endpoint.LastUpdated()),
-				zap.String("location", endpoint.Location()),
-				zap.Bool("localDC", endpoint.LocalDC()),
-			)
-			start := time.Now()
-			return func(info trace.DriverClusterUpdateDoneInfo) {
-				l.Info("updated",
-					zap.String("version", version),
-					zap.Duration("latency", time.Since(start)),
-					zap.String("address", endpoint.Address()),
-					zap.Time("lastUpdated", endpoint.LastUpdated()),
-					zap.String("location", endpoint.Location()),
-					zap.Bool("localDC", endpoint.LocalDC()),
-					zap.String("state", info.State.String()),
-				)
-			}
-		}
 		t.OnPessimizeNode = func(info trace.DriverPessimizeNodeStartInfo) func(trace.DriverPessimizeNodeDoneInfo) {
 			endpoint := info.Endpoint
 			l.Warn("pessimizing",
