@@ -20,9 +20,9 @@ func main() {
 	// init your zap.Logger
 	log, err := zap.NewProduction()
 	
-    db, err := ydb.New(
+    db, err := ydb.Open(
         context.Background(),
-		ydb.MustConnectionString(connection),
+		os.Getenv("YDB_CONNECTION_STRING"),
 		ydbZap.WithTraces(
 			log,
 			ydbZap.DetailsAll,
