@@ -118,7 +118,7 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 	}
 	if details&trace.DriverRepeaterEvents != 0 {
 		l := l.Named("repeater")
-		t.OnRepeaterWakeUp = func(info trace.DriverRepeaterTickStartInfo) func(trace.DriverRepeaterTickDoneInfo) {
+		t.OnRepeaterWakeUp = func(info trace.DriverRepeaterWakeUpStartInfo) func(trace.DriverRepeaterWakeUpDoneInfo) {
 			name := info.Name
 			event := info.Event
 			l.Info("repeater wake up",
@@ -127,7 +127,7 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 				zap.String("event", event),
 			)
 			start := time.Now()
-			return func(info trace.DriverRepeaterTickDoneInfo) {
+			return func(info trace.DriverRepeaterWakeUpDoneInfo) {
 				if info.Error == nil {
 					l.Info("repeater wake up done",
 						zap.String("version", version),
