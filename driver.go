@@ -182,17 +182,6 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 				}
 			}
 		}
-		t.OnConnUsagesChange = func(info trace.DriverConnUsagesChangeInfo) {
-			l.Debug("conn usages changed",
-				zap.String("version", version),
-				zap.String("address", info.Endpoint.Address()),
-				zap.Time("lastUpdated", info.Endpoint.LastUpdated()),
-				zap.String("location", info.Endpoint.Location()),
-				zap.Bool("dataCenter", info.Endpoint.LocalDC()),
-				zap.Int("usages", info.Usages),
-			)
-
-		}
 		t.OnConnStateChange = func(info trace.DriverConnStateChangeStartInfo) func(trace.DriverConnStateChangeDoneInfo) {
 			endpoint := info.Endpoint
 			l.Debug("conn state change",
@@ -380,6 +369,51 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 				}
 			}
 		}
+		t.OnConnBan = func(info trace.DriverConnBanStartInfo) func(trace.DriverConnBanDoneInfo) {
+			endpoint := info.Endpoint
+			l.Warn("ban start",
+				zap.String("version", version),
+				zap.String("address", endpoint.Address()),
+				zap.Time("lastUpdated", endpoint.LastUpdated()),
+				zap.String("location", endpoint.Location()),
+				zap.Bool("localDC", endpoint.LocalDC()),
+				zap.NamedError("cause", info.Cause),
+			)
+			start := time.Now()
+			return func(info trace.DriverConnBanDoneInfo) {
+				l.Warn("ban done",
+					zap.String("version", version),
+					zap.Duration("latency", time.Since(start)),
+					zap.String("address", endpoint.Address()),
+					zap.Time("lastUpdated", endpoint.LastUpdated()),
+					zap.String("location", endpoint.Location()),
+					zap.Bool("localDC", endpoint.LocalDC()),
+					zap.String("state", info.State.String()),
+				)
+			}
+		}
+		t.OnConnAllow = func(info trace.DriverConnAllowStartInfo) func(doneInfo trace.DriverConnAllowDoneInfo) {
+			endpoint := info.Endpoint
+			l.Warn("allow start",
+				zap.String("version", version),
+				zap.String("address", endpoint.Address()),
+				zap.Time("lastUpdated", endpoint.LastUpdated()),
+				zap.String("location", endpoint.Location()),
+				zap.Bool("localDC", endpoint.LocalDC()),
+			)
+			start := time.Now()
+			return func(info trace.DriverConnAllowDoneInfo) {
+				l.Warn("allow done",
+					zap.String("version", version),
+					zap.Duration("latency", time.Since(start)),
+					zap.String("address", endpoint.Address()),
+					zap.Time("lastUpdated", endpoint.LastUpdated()),
+					zap.String("location", endpoint.Location()),
+					zap.Bool("localDC", endpoint.LocalDC()),
+					zap.String("state", info.State.String()),
+				)
+			}
+		}
 	}
 	if details&trace.DriverClusterEvents != 0 {
 		l := l.Named("cluster")
@@ -435,73 +469,6 @@ func Driver(l *zap.Logger, details trace.Details) trace.Driver {
 						zap.Error(info.Error),
 					)
 				}
-			}
-		}
-		t.OnClusterInsert = func(info trace.DriverClusterInsertStartInfo) func(trace.DriverClusterInsertDoneInfo) {
-			endpoint := info.Endpoint
-			l.Debug("inserting",
-				zap.String("version", version),
-				zap.String("address", endpoint.Address()),
-				zap.Time("lastUpdated", endpoint.LastUpdated()),
-				zap.String("location", endpoint.Location()),
-				zap.Bool("localDC", endpoint.LocalDC()),
-			)
-			start := time.Now()
-			return func(info trace.DriverClusterInsertDoneInfo) {
-				l.Info("inserted",
-					zap.String("version", version),
-					zap.Duration("latency", time.Since(start)),
-					zap.String("address", endpoint.Address()),
-					zap.Time("lastUpdated", endpoint.LastUpdated()),
-					zap.String("location", endpoint.Location()),
-					zap.Bool("localDC", endpoint.LocalDC()),
-					zap.String("state", info.State.String()),
-				)
-			}
-		}
-		t.OnClusterRemove = func(info trace.DriverClusterRemoveStartInfo) func(trace.DriverClusterRemoveDoneInfo) {
-			endpoint := info.Endpoint
-			l.Debug("removing",
-				zap.String("version", version),
-				zap.String("address", endpoint.Address()),
-				zap.Time("lastUpdated", endpoint.LastUpdated()),
-				zap.String("location", endpoint.Location()),
-				zap.Bool("localDC", endpoint.LocalDC()),
-			)
-			start := time.Now()
-			return func(info trace.DriverClusterRemoveDoneInfo) {
-				l.Info("removed",
-					zap.String("version", version),
-					zap.Duration("latency", time.Since(start)),
-					zap.String("address", endpoint.Address()),
-					zap.Time("lastUpdated", endpoint.LastUpdated()),
-					zap.String("location", endpoint.Location()),
-					zap.Bool("localDC", endpoint.LocalDC()),
-					zap.String("state", info.State.String()),
-				)
-			}
-		}
-		t.OnPessimizeNode = func(info trace.DriverPessimizeNodeStartInfo) func(trace.DriverPessimizeNodeDoneInfo) {
-			endpoint := info.Endpoint
-			l.Warn("pessimizing",
-				zap.String("version", version),
-				zap.String("address", endpoint.Address()),
-				zap.Time("lastUpdated", endpoint.LastUpdated()),
-				zap.String("location", endpoint.Location()),
-				zap.Bool("localDC", endpoint.LocalDC()),
-				zap.NamedError("cause", info.Cause),
-			)
-			start := time.Now()
-			return func(info trace.DriverPessimizeNodeDoneInfo) {
-				l.Warn("pessimized",
-					zap.String("version", version),
-					zap.Duration("latency", time.Since(start)),
-					zap.String("address", endpoint.Address()),
-					zap.Time("lastUpdated", endpoint.LastUpdated()),
-					zap.String("location", endpoint.Location()),
-					zap.Bool("localDC", endpoint.LocalDC()),
-					zap.String("state", info.State.String()),
-				)
 			}
 		}
 	}
