@@ -15,13 +15,12 @@ func Retry(log *zap.Logger, details trace.Details) (t trace.Retry) {
 		t.OnRetry = func(info trace.RetryLoopStartInfo) func(trace.RetryLoopIntermediateInfo) func(trace.RetryLoopDoneInfo) {
 			idempotent := info.Idempotent
 			retry.Debug("init",
-				zap.String("version", version),
-				zap.Bool("idempotent", idempotent))
+				zap.Bool("idempotent", idempotent),
+			)
 			start := time.Now()
 			return func(info trace.RetryLoopIntermediateInfo) func(doneInfo trace.RetryLoopDoneInfo) {
 				if info.Error == nil {
 					retry.Debug("attempt",
-						zap.String("version", version),
 						zap.Duration("latency", time.Since(start)),
 						zap.Bool("idempotent", idempotent),
 					)
@@ -44,7 +43,6 @@ func Retry(log *zap.Logger, details trace.Details) (t trace.Retry) {
 				return func(info trace.RetryLoopDoneInfo) {
 					if info.Error == nil {
 						retry.Debug("finish",
-							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.Bool("idempotent", idempotent),
 							zap.Int("attempts", info.Attempts),

@@ -14,8 +14,7 @@ func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
 		t.OnDiscover = func(info trace.DiscoveryDiscoverStartInfo) func(trace.DiscoveryDiscoverDoneInfo) {
 			address := info.Address
 			database := info.Database
-			log.Info("try to discover",
-				zap.String("version", version),
+			log.Debug("try to discover",
 				zap.String("address", address),
 				zap.String("database", database),
 			)
@@ -27,7 +26,6 @@ func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
 						endpoints = append(endpoints, e.String())
 					}
 					log.Info("discover finished",
-						zap.String("version", version),
 						zap.String("address", address),
 						zap.String("database", database),
 						zap.Duration("latency", time.Since(start)),
