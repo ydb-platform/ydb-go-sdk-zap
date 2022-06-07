@@ -577,7 +577,7 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					)
 				}
 			}
-			t.OnPoolStateChange = func(info trace.TablePooStateChangeInfo) {
+			t.OnPoolStateChange = func(info trace.TablePoolStateChangeInfo) {
 				log.Info("change",
 					zap.Int("size", info.Size),
 					zap.String("event", info.Event),
