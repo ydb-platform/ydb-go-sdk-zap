@@ -12,6 +12,7 @@ import (
     "go.uber.org/zap"
 
     "github.com/ydb-platform/ydb-go-sdk/v3"
+    "github.com/ydb-platform/ydb-go-sdk/v3/trace"
 
     ydbZap "github.com/ydb-platform/ydb-go-sdk-zap"
 )
@@ -25,7 +26,7 @@ func main() {
 		os.Getenv("YDB_CONNECTION_STRING"),
 		ydbZap.WithTraces(
 			log,
-			ydbZap.DetailsAll,
+			trace.DetailsAll,
 		),
 	)
     // work with db
