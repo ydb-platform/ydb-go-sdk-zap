@@ -29,7 +29,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 		}
 
 		t.OnReaderReconnectRequest = func(info trace.TopicReaderReconnectRequestInfo) {
-			log.Debug("request reconnect", zap.NamedError("reason", info.Reason))
+			log.Debug("request reconnect", zap.NamedError("reason", info.Reason), zap.Bool("was_sent", info.WasSent))
 		}
 
 	}
