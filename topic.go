@@ -13,17 +13,13 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 	topicLogger = topicLogger.Named("ydb").Named("topic")
 	t := trace.Topic{}
 
-	logStart := details&trace.LogStartEvents != 0
-
 	if details&trace.TopicReaderStreamLifeCycleEvents != 0 {
 		log := topicLogger.Named("reader").Named("lifecycle")
 
 		t.OnReaderReconnect = func(startInfo trace.TopicReaderReconnectStartInfo) func(doneInfo trace.TopicReaderReconnectDoneInfo) {
 			start := time.Now()
 
-			if logStart {
-				log.Debug("reconnecting")
-			}
+			log.Debug("reconnecting")
 
 			return func(doneInfo trace.TopicReaderReconnectDoneInfo) {
 				log.Info("reconnected",
@@ -46,9 +42,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 				zap.String("reader_connection_id", startInfo.ReaderConnectionID),
 				zap.Int64("partition_id", startInfo.PartitionID),
 				zap.Int64("partition_session_id", startInfo.PartitionSessionID))
-			if logStart {
-				startLogger.Debug("read partition response starting...")
-			}
+			startLogger.Debug("read partition response starting...")
 
 			return func(doneInfo trace.TopicReaderPartitionReadStartResponseDoneInfo) {
 				startLogger.Info("read partition response completed",
@@ -71,9 +65,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 				zap.Bool("graceful", startInfo.Graceful),
 			)
 
-			if logStart {
-				startLogger.Debug("reader partition stopping")
-			}
+			startLogger.Debug("reader partition stopping")
 			return func(doneInfo trace.TopicReaderPartitionReadStopResponseDoneInfo) {
 				logInfoWarn(startLogger, doneInfo.Error, "reader partition stopped",
 					zap.Duration("latency", time.Since(start)),
@@ -95,9 +87,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 				zap.Int64("commit_end_offset", startInfo.EndOffset),
 			)
 
-			if logStart {
-				startLogger.Debug("start committing...")
-			}
+			startLogger.Debug("start committing...")
 
 			return func(doneInfo trace.TopicReaderCommitDoneInfo) {
 				logDebugWarn(startLogger, doneInfo.Error, "committed",
@@ -113,9 +103,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 				zap.Int64s("partitions_session_id", startInfo.CommitsInfo.PartitionSessionIDs()),
 			)
 
-			if logStart {
-				startLogger.Debug("commit message sending...")
-			}
+			startLogger.Debug("commit message sending...")
 			return func(doneInfo trace.TopicReaderSendCommitMessageDoneInfo) {
 				logDebugWarn(startLogger, doneInfo.Error, "commit message sent",
 					zap.Duration("latency", time.Since(start)),
@@ -139,9 +127,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 				zap.String("reader_connection_id", startInfo.ReaderConnectionID),
 				zap.String("close_reason", startInfo.CloseReason.Error()),
 			)
-			if logStart {
-				startLogger.Debug("stream closing")
-			}
+			startLogger.Debug("stream closing")
 
 			return func(doneInfo trace.TopicReaderCloseDoneInfo) {
 				logDebugWarn(startLogger, doneInfo.CloseError, "topic reader stream closed",
@@ -157,9 +143,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 				zap.String("consumer", startInfo.InitRequestInfo.GetConsumer()),
 				zap.Strings("topics", startInfo.InitRequestInfo.GetTopics()),
 			)
-			if logStart {
-				startLogger.Debug("stream init starting...")
-			}
+			startLogger.Debug("stream init starting...")
 
 			return func(doneInfo trace.TopicReaderInitDoneInfo) {
 				logDebugWarn(startLogger, doneInfo.Error, "topic reader stream initialized",
@@ -181,9 +165,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 			startLogger := log.With(
 				zap.String("reader_connection_id", startInfo.ReaderConnectionID),
 			)
-			if logStart {
-				startLogger.Debug("token updating...")
-			}
+			startLogger.Debug("token updating...")
 
 			return func(updateTokenInfo trace.OnReadUpdateTokenMiddleTokenReceivedInfo) func(doneInfo trace.OnReadStreamUpdateTokenDoneInfo) {
 				logDebugWarn(startLogger, updateTokenInfo.Error, "got token",
@@ -222,9 +204,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 				zap.Int("batches_count", batchesCount),
 				zap.Int("messages_count", messagesCount),
 			)
-			if logStart {
-				startLogger.Debug("data response received, process starting...")
-			}
+			startLogger.Debug("data response received, process starting...")
 
 			return func(doneInfo trace.TopicReaderReceiveDataResponseDoneInfo) {
 				logDebugWarn(startLogger, doneInfo.Error, "data response received and processed",
@@ -240,9 +220,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
 				zap.Int("max_count", startInfo.MaxCount),
 				zap.Int("local_capacity_before", startInfo.FreeBufferCapacity),
 			)
-			if logStart {
-				startLogger.Debug("read messages called, waiting...")
-			}
+			startLogger.Debug("read messages called, waiting...")
 
 			return func(doneInfo trace.TopicReaderReadMessagesDoneInfo) {
 				logDebugInfo(startLogger, doneInfo.Error, "read messages returned",
