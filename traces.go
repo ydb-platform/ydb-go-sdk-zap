@@ -16,5 +16,6 @@ func WithTraces(l *zap.Logger, details trace.Details) ydb.Option {
 		ydb.WithTraceCoordination(Coordination(l, details)),
 		ydb.WithTraceRatelimiter(Ratelimiter(l, details)),
 		ydb.WithTraceDiscovery(Discovery(l, details)),
+		ydb.WithTraceTopic(Topic(l, details)),
 	)
 }
