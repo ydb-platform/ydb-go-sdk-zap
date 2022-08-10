@@ -543,42 +543,20 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 		log := log.Named("pool")
 		if details&trace.TablePoolSessionLifeCycleEvents != 0 {
 			log := log.Named("session")
-			t.OnPoolSessionNew = func(info trace.TablePoolSessionNewStartInfo) func(trace.TablePoolSessionNewDoneInfo) {
-				log.Debug("try to create")
-				start := time.Now()
-				return func(info trace.TablePoolSessionNewDoneInfo) {
-					if info.Error == nil {
-						session := info.Session
-						log.Debug("created",
-							zap.String("id", session.ID()),
-							zap.String("status", session.Status()),
-						)
-					} else {
-						log.Error("created",
-							zap.String("version", version),
-							zap.Duration("latency", time.Since(start)),
-							zap.Error(info.Error),
-						)
-					}
-				}
-			}
-			t.OnPoolSessionClose = func(info trace.TablePoolSessionCloseStartInfo) func(trace.TablePoolSessionCloseDoneInfo) {
-				session := info.Session
-				log.Debug("closing",
-					zap.String("id", session.ID()),
-					zap.String("status", session.Status()),
+			t.OnPoolSessionAdd = func(info trace.TablePoolSessionAddInfo) {
+				log.Debug("session added to pool",
+					zap.String("id", info.Session.ID()),
+					zap.String("status", info.Session.Status()),
 				)
-				start := time.Now()
-				return func(info trace.TablePoolSessionCloseDoneInfo) {
-					log.Debug("closed",
-						zap.Duration("latency", time.Since(start)),
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-					)
-				}
+			}
+			t.OnPoolSessionRemove = func(info trace.TablePoolSessionRemoveInfo) {
+				log.Debug("session removed from pool",
+					zap.String("id", info.Session.ID()),
+					zap.String("status", info.Session.Status()),
+				)
 			}
 			t.OnPoolStateChange = func(info trace.TablePoolStateChangeInfo) {
-				log.Info("change",
+				log.Debug("change",
 					zap.Int("size", info.Size),
 					zap.String("event", info.Event),
 				)
