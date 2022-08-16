@@ -9,7 +9,7 @@ import (
 	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
 )
 
-func Topic(topicLogger *zap.Logger, details trace.Details) trace.Topic {
+func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace.Topic {
 	topicLogger = topicLogger.Named("ydb").Named("topic")
 	t := trace.Topic{}
 

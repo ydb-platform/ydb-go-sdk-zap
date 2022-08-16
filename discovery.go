@@ -8,7 +8,7 @@ import (
 	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
 )
 
-func Discovery(log *zap.Logger, details trace.Details) (t trace.Discovery) {
+func Discovery(log *zap.Logger, details trace.Details, opts ...option) (t trace.Discovery) {
 	if details&trace.DiscoveryEvents != 0 {
 		log = log.Named("ydb").Named("discovery")
 		t.OnDiscover = func(info trace.DiscoveryDiscoverStartInfo) func(trace.DiscoveryDiscoverDoneInfo) {

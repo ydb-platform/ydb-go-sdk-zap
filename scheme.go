@@ -6,6 +6,6 @@ import (
 	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
 )
 
-func Scheme(log *zap.Logger, details trace.Details) (t trace.Scheme) {
+func Scheme(log *zap.Logger, details trace.Details, opts ...option) (t trace.Scheme) {
 	return t
 }

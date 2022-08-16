@@ -11,9 +11,12 @@ import (
 )
 
 // Table makes trace.Table with zap logging
-func Table(log *zap.Logger, details trace.Details) trace.Table {
+func Table(log *zap.Logger, details trace.Details, opts ...option) (t trace.Table) {
+	if details&trace.TableEvents == 0 {
+		return t
+	}
+	options := parseOptions(opts...)
 	log = log.Named("ydb").Named("table")
-	t := trace.Table{}
 	if details&trace.TableEvents != 0 {
 		t.OnInit = func(info trace.TableInitStartInfo) func(trace.TableInitDoneInfo) {
 			log.Info("initializing")
@@ -276,32 +279,60 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 				) {
 					session := info.Session
 					query := info.Query
-					log.Debug("preparing",
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-						zap.String("query", query),
-					)
+					if options.logQuery {
+						log.Debug("preparing",
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.String("query", query),
+						)
+					} else {
+						log.Debug("preparing",
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+						)
+					}
 					start := time.Now()
 					return func(info trace.TablePrepareDataQueryDoneInfo) {
 						if info.Error == nil {
-							log.Debug(
-								"prepared",
-								zap.Duration("latency", time.Since(start)),
-								zap.String("id", session.ID()),
-								zap.String("status", session.Status()),
-								zap.String("query", query),
-								zap.String("yql", info.Result.String()),
-							)
+							if options.logQuery {
+								log.Debug(
+									"prepared",
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.String("query", query),
+									zap.String("yql", info.Result.String()),
+								)
+							} else {
+								log.Debug(
+									"prepared",
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.String("yql", info.Result.String()),
+								)
+							}
 						} else {
-							log.Error(
-								"prepare failed",
-								zap.String("version", version),
-								zap.Duration("latency", time.Since(start)),
-								zap.String("id", session.ID()),
-								zap.String("status", session.Status()),
-								zap.String("query", query),
-								zap.Error(info.Error),
-							)
+							if options.logQuery {
+								log.Error(
+									"prepare failed",
+									zap.String("version", version),
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.String("query", query),
+									zap.Error(info.Error),
+								)
+							} else {
+								log.Error(
+									"prepare failed",
+									zap.String("version", version),
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.Error(info.Error),
+								)
+							}
 						}
 					}
 				}
@@ -313,37 +344,69 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					session := info.Session
 					query := info.Query
 					params := info.Parameters
-					log.Debug("executing",
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-						zap.String("yql", query.String()),
-						zap.String("params", params.String()),
-					)
+					if options.logQuery {
+						log.Debug("executing",
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.String("yql", query.String()),
+							zap.String("params", params.String()),
+						)
+					} else {
+						log.Debug("executing",
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.String("params", params.String()),
+						)
+					}
 					start := time.Now()
 					return func(info trace.TableExecuteDataQueryDoneInfo) {
 						if info.Error == nil {
 							tx := info.Tx
-							log.Debug("executed",
-								zap.Duration("latency", time.Since(start)),
-								zap.String("id", session.ID()),
-								zap.String("status", session.Status()),
-								zap.String("tx", tx.ID()),
-								zap.String("yql", query.String()),
-								zap.String("params", params.String()),
-								zap.Bool("prepared", info.Prepared),
-								zap.NamedError("resultErr", info.Result.Err()),
-							)
+							if options.logQuery {
+								log.Debug("executed",
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.String("tx", tx.ID()),
+									zap.String("yql", query.String()),
+									zap.String("params", params.String()),
+									zap.Bool("prepared", info.Prepared),
+									zap.NamedError("resultErr", info.Result.Err()),
+								)
+							} else {
+								log.Debug("executed",
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.String("tx", tx.ID()),
+									zap.String("params", params.String()),
+									zap.Bool("prepared", info.Prepared),
+									zap.NamedError("resultErr", info.Result.Err()),
+								)
+							}
 						} else {
-							log.Error("execute failed",
-								zap.String("version", version),
-								zap.Duration("latency", time.Since(start)),
-								zap.String("id", session.ID()),
-								zap.String("status", session.Status()),
-								zap.String("yql", query.String()),
-								zap.String("params", params.String()),
-								zap.Bool("prepared", info.Prepared),
-								zap.Error(info.Error),
-							)
+							if options.logQuery {
+								log.Error("execute failed",
+									zap.String("version", version),
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.String("yql", query.String()),
+									zap.String("params", params.String()),
+									zap.Bool("prepared", info.Prepared),
+									zap.Error(info.Error),
+								)
+							} else {
+								log.Error("execute failed",
+									zap.String("version", version),
+									zap.Duration("latency", time.Since(start)),
+									zap.String("id", session.ID()),
+									zap.String("status", session.Status()),
+									zap.String("params", params.String()),
+									zap.Bool("prepared", info.Prepared),
+									zap.Error(info.Error),
+								)
+							}
 						}
 					}
 				}
@@ -360,12 +423,20 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 					session := info.Session
 					query := info.Query
 					params := info.Parameters
-					log.Debug("executing",
-						zap.String("id", session.ID()),
-						zap.String("status", session.Status()),
-						zap.String("yql", query.String()),
-						zap.String("params", params.String()),
-					)
+					if options.logQuery {
+						log.Debug("executing",
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.String("yql", query.String()),
+							zap.String("params", params.String()),
+						)
+					} else {
+						log.Debug("executing",
+							zap.String("id", session.ID()),
+							zap.String("status", session.Status()),
+							zap.String("params", params.String()),
+						)
+					}
 					start := time.Now()
 					return func(
 						info trace.TableSessionQueryStreamExecuteIntermediateInfo,
@@ -382,24 +453,45 @@ func Table(log *zap.Logger, details trace.Details) trace.Table {
 						}
 						return func(info trace.TableSessionQueryStreamExecuteDoneInfo) {
 							if info.Error == nil {
-								log.Debug("executed",
-									zap.Duration("latency", time.Since(start)),
-									zap.String("id", session.ID()),
-									zap.String("status", session.Status()),
-									zap.String("yql", query.String()),
-									zap.String("params", params.String()),
-									zap.Error(info.Error),
-								)
+								if options.logQuery {
+									log.Debug("executed",
+										zap.Duration("latency", time.Since(start)),
+										zap.String("id", session.ID()),
+										zap.String("status", session.Status()),
+										zap.String("yql", query.String()),
+										zap.String("params", params.String()),
+										zap.Error(info.Error),
+									)
+								} else {
+									log.Debug("executed",
+										zap.Duration("latency", time.Since(start)),
+										zap.String("id", session.ID()),
+										zap.String("status", session.Status()),
+										zap.String("params", params.String()),
+										zap.Error(info.Error),
+									)
+								}
 							} else {
-								log.Error("execute failed",
-									zap.String("version", version),
-									zap.Duration("latency", time.Since(start)),
-									zap.String("id", session.ID()),
-									zap.String("status", session.Status()),
-									zap.String("yql", query.String()),
-									zap.String("params", params.String()),
-									zap.Error(info.Error),
-								)
+								if options.logQuery {
+									log.Error("execute failed",
+										zap.String("version", version),
+										zap.Duration("latency", time.Since(start)),
+										zap.String("id", session.ID()),
+										zap.String("status", session.Status()),
+										zap.String("yql", query.String()),
+										zap.String("params", params.String()),
+										zap.Error(info.Error),
+									)
+								} else {
+									log.Error("execute failed",
+										zap.String("version", version),
+										zap.Duration("latency", time.Since(start)),
+										zap.String("id", session.ID()),
+										zap.String("status", session.Status()),
+										zap.String("params", params.String()),
+										zap.Error(info.Error),
+									)
+								}
 							}
 						}
 					}

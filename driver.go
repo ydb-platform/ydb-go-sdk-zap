@@ -10,7 +10,7 @@ import (
 )
 
 // Driver makes trace.Driver with zap lging
-func Driver(l *zap.Logger, details trace.Details) trace.Driver {
+func Driver(l *zap.Logger, details trace.Details, opts ...option) trace.Driver {
 	l = l.Named("ydb").Named("driver")
 	t := trace.Driver{}
 	if details&trace.DriverNetEvents != 0 {
