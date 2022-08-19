@@ -25,8 +25,7 @@ func Table(log *zap.Logger, details trace.Details, opts ...option) (t trace.Tabl
 				log.Info("initialized",
 					zap.String("version", version),
 					zap.Duration("latency", time.Since(start)),
-					zap.Int("minSize", info.KeepAliveMinSize),
-					zap.Int("maxSize", info.Limit),
+					zap.Int("limit", info.Limit),
 				)
 			}
 		}
