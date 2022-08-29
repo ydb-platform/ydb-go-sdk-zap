@@ -201,7 +201,6 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 					logDebugWarn(logger, doneInfo.Error, "token updated on stream",
 						zap.String("reader_connection_id", startInfo.ReaderConnectionID),
 
-						zap.Duration("latency", time.Since(start)),
 						zap.Int("token_len", updateTokenInfo.TokenLen),
 
 						zap.Duration("latency", time.Since(start)),
