@@ -332,7 +332,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 			)
 
 			return func(doneInfo trace.TopicWriterCloseDoneInfo) {
-				logDebugInfo(logger, doneInfo.Error, "close topic writer starting... {writer_instance_id: '%v', reason: '%v'",
+				logDebugInfo(logger, doneInfo.Error, "close topic writer starting completed",
 					zap.String("writer_instance_id", startInfo.WriterInstanceID),
 					zap.NamedError("reason", startInfo.Reason),
 					//
@@ -355,7 +355,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 			)
 
 			return func(doneInfo trace.TopicWriterCompressMessagesDoneInfo) {
-				logDebugInfo(logger, doneInfo.Error, "compress message completed {writer_instance_id:'%v', session_id: '%v', reason: %v, codec: %v, messages_count: %v, first_seqno: %v}",
+				logDebugInfo(logger, doneInfo.Error, "compress message completed",
 					zap.String("writer_instance_id", startInfo.WriterInstanceID),
 					zap.String("session_id", startInfo.SessionID),
 					zap.Stringer("reason", startInfo.Reason),
@@ -391,7 +391,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 		}
 		t.OnWriterReadUnknownGrpcMessage = func(info trace.TopicOnWriterReadUnknownGrpcMessageInfo) {
 			logger.Info(
-				"topic writer receive unknown message from server {writer_instance_id:'%v', session_id:'%v', error: '%v'}",
+				"topic writer receive unknown message from server",
 				zap.String("writer_instance_id", info.WriterInstanceID),
 				zap.String("session_id", info.SessionID),
 				zap.Error(info.Error),
