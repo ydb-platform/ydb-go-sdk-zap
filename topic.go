@@ -13,6 +13,9 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 	topicLogger = topicLogger.Named("ydb").Named("topic")
 	t := trace.Topic{}
 
+	///
+	/// Topic reader
+	///
 	if details&trace.TopicReaderStreamLifeCycleEvents != 0 {
 		logger := topicLogger.Named("reader").Named("lifecycle")
 
@@ -277,5 +280,124 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 			)
 		}
 	}
+
+	///
+	/// Topic writer
+	///
+	if details&trace.TopicWriterStreamLifeCycleEvents != 0 {
+		logger := topicLogger.Named("writer").Named("lifecycle")
+		t.OnWriterReconnect = func(startInfo trace.TopicWriterReconnectStartInfo) func(doneInfo trace.TopicWriterReconnectDoneInfo) {
+			start := time.Now()
+			logger.Debug("connect to topic writer stream starting...",
+				zap.String("topic", startInfo.Topic),
+				zap.String("producer_id", startInfo.ProducerID),
+				zap.String("writer_instance_id", startInfo.WriterInstanceID),
+				zap.Int("attempt", startInfo.Attempt),
+			)
+			return func(doneInfo trace.TopicWriterReconnectDoneInfo) {
+				logDebugInfo(logger, doneInfo.Error, "connect to topic writer stream completed",
+					zap.String("topic", startInfo.Topic),
+					zap.String("producer_id", startInfo.ProducerID),
+					zap.String("writer_instance_id", startInfo.WriterInstanceID),
+					zap.Int("attempt", startInfo.Attempt),
+					//
+					zap.Duration("latency", time.Since(start)),
+				)
+			}
+		}
+		t.OnWriterInitStream = func(startInfo trace.TopicWriterInitStreamStartInfo) func(doneInfo trace.TopicWriterInitStreamDoneInfo) {
+			start := time.Now()
+			logger.Debug("init stream starting...",
+				zap.String("topic", startInfo.Topic),
+				zap.String("producer_id", startInfo.ProducerID),
+				zap.String("writer_instance_id", startInfo.WriterInstanceID),
+			)
+
+			return func(doneInfo trace.TopicWriterInitStreamDoneInfo) {
+				logDebugInfo(logger, doneInfo.Error, "init stream completed {topic:'%v', producer_id:'%v', writer_instance_id: '%v'",
+					zap.String("topic", startInfo.Topic),
+					zap.String("producer_id", startInfo.ProducerID),
+					zap.String("writer_instance_id", startInfo.WriterInstanceID),
+					//
+					zap.Duration("latency", time.Since(start)),
+					zap.String("session", doneInfo.SessionID),
+				)
+			}
+		}
+		t.OnWriterClose = func(startInfo trace.TopicWriterCloseStartInfo) func(doneInfo trace.TopicWriterCloseDoneInfo) {
+			start := time.Now()
+			logger.Debug("close topic writer starting... ",
+				zap.String("writer_instance_id", startInfo.WriterInstanceID),
+				zap.NamedError("reason", startInfo.Reason),
+			)
+
+			return func(doneInfo trace.TopicWriterCloseDoneInfo) {
+				logDebugInfo(logger, doneInfo.Error, "close topic writer starting... {writer_instance_id: '%v', reason: '%v'",
+					zap.String("writer_instance_id", startInfo.WriterInstanceID),
+					zap.NamedError("reason", startInfo.Reason),
+					//
+					zap.Duration("latency", time.Since(start)),
+				)
+			}
+		}
+	}
+	if details&trace.TopicWriterStreamEvents != 0 {
+		logger := topicLogger.Named("writer").Named("stream")
+		t.OnWriterCompressMessages = func(startInfo trace.TopicWriterCompressMessagesStartInfo) func(doneInfo trace.TopicWriterCompressMessagesDoneInfo) {
+			start := time.Now()
+			logger.Debug("compress message starting...",
+				zap.String("writer_instance_id", startInfo.WriterInstanceID),
+				zap.String("session_id", startInfo.SessionID),
+				zap.Stringer("reason", startInfo.Reason),
+				zap.Int32("codec", startInfo.Codec),
+				zap.Int("messages_count", startInfo.MessagesCount),
+				zap.Int64("first_seqno", startInfo.FirstSeqNo),
+			)
+
+			return func(doneInfo trace.TopicWriterCompressMessagesDoneInfo) {
+				logDebugInfo(logger, doneInfo.Error, "compress message completed {writer_instance_id:'%v', session_id: '%v', reason: %v, codec: %v, messages_count: %v, first_seqno: %v}",
+					zap.String("writer_instance_id", startInfo.WriterInstanceID),
+					zap.String("session_id", startInfo.SessionID),
+					zap.Stringer("reason", startInfo.Reason),
+					zap.Int32("codec", startInfo.Codec),
+					zap.Int("messages_count", startInfo.MessagesCount),
+					zap.Int64("first_seqno", startInfo.FirstSeqNo),
+					//
+					zap.Duration("latency", time.Since(start)),
+				)
+			}
+		}
+		t.OnWriterSendMessages = func(startInfo trace.TopicWriterSendMessagesStartInfo) func(doneInfo trace.TopicWriterSendMessagesDoneInfo) {
+			start := time.Now()
+			logger.Debug("compress message starting...",
+				zap.String("writer_instance_id", startInfo.WriterInstanceID),
+				zap.String("session_id", startInfo.SessionID),
+				zap.Int32("codec", startInfo.Codec),
+				zap.Int("messages_count", startInfo.MessagesCount),
+				zap.Int64("first_seqno", startInfo.FirstSeqNo),
+			)
+
+			return func(doneInfo trace.TopicWriterSendMessagesDoneInfo) {
+				logDebugInfo(logger, doneInfo.Error, "compress message completed",
+					zap.String("writer_instance_id", startInfo.WriterInstanceID),
+					zap.String("session_id", startInfo.SessionID),
+					zap.Int32("codec", startInfo.Codec),
+					zap.Int("messages_count", startInfo.MessagesCount),
+					zap.Int64("first_seqno", startInfo.FirstSeqNo),
+					//
+					zap.Duration("latency", time.Since(start)),
+				)
+			}
+		}
+		t.OnWriterReadUnknownGrpcMessage = func(info trace.TopicOnWriterReadUnknownGrpcMessageInfo) {
+			logger.Info(
+				"topic writer receive unknown message from server {writer_instance_id:'%v', session_id:'%v', error: '%v'}",
+				zap.String("writer_instance_id", info.WriterInstanceID),
+				zap.String("session_id", info.SessionID),
+				zap.Error(info.Error),
+			)
+		}
+	}
+
 	return t
 }
