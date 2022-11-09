@@ -12,22 +12,22 @@ import (
     "go.uber.org/zap"
 
     "github.com/ydb-platform/ydb-go-sdk/v3"
+    "github.com/ydb-platform/ydb-go-sdk/v3/trace"
 
     ydbZap "github.com/ydb-platform/ydb-go-sdk-zap"
 )
 
 func main() {
-	// init your zap.Logger
-	log, err := zap.NewProduction()
+    // init your zap.Logger
+    log, err := zap.NewProduction()
 	
-    db, err := ydb.Open(
-        context.Background(),
-		os.Getenv("YDB_CONNECTION_STRING"),
-		ydbZap.WithTraces(
-			log,
-			ydbZap.DetailsAll,
-		),
-	)
+    db, err := ydb.Open(context.Background(),
+        os.Getenv("YDB_CONNECTION_STRING"),
+        ydbZap.WithTraces(
+            log,
+            trace.DetailsAll,
+        ),
+    )
     // work with db
 }
 ```
