@@ -82,6 +82,31 @@ func (r *record) Error(value error) structural.Record {
 	return r
 }
 
+func (r *record) Int(key string, value int) structural.Record {
+	r.fields = append(r.fields, zap.Int(key, value))
+	return r
+}
+
+func (r *record) Int64(key string, value int64) structural.Record {
+	r.fields = append(r.fields, zap.Int64(key, value))
+	return r
+}
+
+func (r *record) Bool(key string, value bool) structural.Record {
+	r.fields = append(r.fields, zap.Bool(key, value))
+	return r
+}
+
+func (r *record) NamedError(key string, value error) structural.Record {
+	r.fields = append(r.fields, zap.NamedError(key, value))
+	return r
+}
+
+func (r *record) Any(key string, value interface{}) structural.Record {
+	r.fields = append(r.fields, zap.Any(key, value))
+	return r
+}
+
 func (r *record) Message(msg string) {
 	ce := r.l.l.Check(r.level, msg)
 	if ce != nil {
