@@ -1,6 +1,7 @@
 package zap
 
 import (
+	"sync"
 	"time"
 
 	"github.com/ydb-platform/ydb-go-sdk/v3/log/structural"
@@ -16,11 +17,15 @@ func Logger(l *zap.Logger) structural.Logger {
 	return &logger{l: l.WithOptions(zap.AddCallerSkip(1))}
 }
 
+var recordPool = &sync.Pool{New: func () interface{} {
+	return &record{}
+}}
+
 func (l *logger) record(level zapcore.Level) *record {
-	return &record{
-		l: l,
-		level: level,
-	}
+	r := recordPool.Get().(*record)
+	r.level = level
+	r.l = l
+	return r
 }
 
 func (l *logger) Trace() structural.Record {
@@ -82,5 +87,8 @@ func (r *record) Message(msg string) {
 	if ce != nil {
 		ce.Write(r.fields...)
 	}
+	r.fields = r.fields[:0]
+	r.l = nil
+	recordPool.Put(r)
 }
 
