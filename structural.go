@@ -16,44 +16,45 @@ func Logger(l *zap.Logger) structural.Logger {
 	return &logger{l: l.WithOptions(zap.AddCallerSkip(1))}
 }
 
-func (l *logger) Record() structural.Record {
+func (l *logger) record(level zapcore.Level) *record {
 	return &record{
 		l: l,
+		level: level,
 	}
+}
+
+func (l *logger) Trace() structural.Record {
+	return l.record(zapcore.DebugLevel)
+}
+
+func (l *logger) Debug() structural.Record {
+	return l.record(zapcore.DebugLevel)
+}
+
+func (l *logger) Info() structural.Record {
+	return l.record(zapcore.InfoLevel)
+}
+
+func (l *logger) Warn() structural.Record {
+	return l.record(zapcore.WarnLevel)
+}
+
+func (l *logger) Error() structural.Record {
+	return l.record(zapcore.ErrorLevel)
+}
+
+func (l *logger) Fatal() structural.Record {
+	return l.record(zapcore.FatalLevel)
 }
 
 func (l *logger) WithName(name string) structural.Logger {
 	return Logger(l.l.Named(name))
 }
 
-func (l *logger) WithCallerSkip(n int) structural.Logger {
-	return Logger(l.l.WithOptions(zap.AddCallerSkip(n)))
-}
-
 type record struct {
 	l *logger
 	level zapcore.Level
 	fields []zap.Field
-}
-
-func (r *record) Level(lvl structural.Level) structural.Record {
-	switch lvl {
-	case structural.TRACE:
-		r.level = zapcore.DebugLevel
-	case structural.DEBUG:
-		r.level = zapcore.DebugLevel
-	case structural.INFO:
-		r.level = zapcore.InfoLevel
-	case structural.WARN:
-		r.level = zapcore.WarnLevel
-	case structural.ERROR:
-		r.level = zapcore.ErrorLevel
-	case structural.FATAL:
-		r.level = zapcore.FatalLevel
-	default:
-		r.level = zapcore.DebugLevel
-	}
-	return r
 }
 
 func (r *record) String(key string, value string) structural.Record {
@@ -74,11 +75,6 @@ func (r *record) Duration(key string, value time.Duration) structural.Record {
 func (r *record) Error(value error) structural.Record {
 	r.fields = append(r.fields, zap.Error(value))
 	return r
-}
-
-func (r *record) Reset() {
-	r.level = zapcore.InfoLevel
-	r.fields = r.fields[:0]
 }
 
 func (r *record) Message(msg string) {
