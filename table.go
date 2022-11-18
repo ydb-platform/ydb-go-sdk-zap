@@ -87,6 +87,9 @@ func Table(log *zap.Logger, details trace.Details, opts ...option) (t trace.Tabl
 		}
 		t.OnDo = func(info trace.TableDoStartInfo) func(info trace.TableDoIntermediateInfo) func(trace.TableDoDoneInfo) {
 			idempotent := info.Idempotent
+			if info.NestedCall {
+				do.Error("nested call")
+			}
 			do.Debug("init",
 				zap.Bool("idempotent", idempotent),
 			)
@@ -141,6 +144,9 @@ func Table(log *zap.Logger, details trace.Details, opts ...option) (t trace.Tabl
 		}
 		t.OnDoTx = func(info trace.TableDoTxStartInfo) func(info trace.TableDoTxIntermediateInfo) func(trace.TableDoTxDoneInfo) {
 			idempotent := info.Idempotent
+			if info.NestedCall {
+				do.Error("nested call")
+			}
 			doTx.Debug("init",
 				zap.Bool("idempotent", idempotent),
 			)

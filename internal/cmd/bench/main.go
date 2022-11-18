@@ -114,6 +114,7 @@ func upsertData(ctx context.Context, c table.Client, prefix, tableName string, c
 		func(ctx context.Context, s table.Session) (err error) {
 			return s.DropTable(ctx, path.Join(prefix, tableName))
 		},
+		table.WithIdempotent(),
 	)
 	if err != nil {
 		log.Warn("drop table", zap.Error(err))
@@ -130,6 +131,7 @@ func upsertData(ctx context.Context, c table.Client, prefix, tableName string, c
 				options.WithPrimaryKeyColumn("series_id"),
 			)
 		},
+		table.WithIdempotent(),
 	)
 	if err != nil {
 		log.Error("create table", zap.Error(err))
@@ -164,6 +166,7 @@ func upsertData(ctx context.Context, c table.Client, prefix, tableName string, c
 						types.ListValue(rows...),
 					)
 				},
+				table.WithIdempotent(),
 			)
 			if err == nil {
 				log.Debug("bulk upserted", zap.Int("from", shift), zap.Int("to", shift+batchSize))
@@ -214,6 +217,7 @@ func scanSelect(ctx context.Context, c table.Client, prefix string, limit int64)
 			}
 			return res.Err()
 		},
+		table.WithIdempotent(),
 	)
 	return count, err
 }

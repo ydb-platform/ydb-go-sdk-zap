@@ -15,6 +15,9 @@ func Retry(log *zap.Logger, details trace.Details) (t trace.Retry) {
 		retry := log.Named("retry")
 		t.OnRetry = func(info trace.RetryLoopStartInfo) func(trace.RetryLoopIntermediateInfo) func(trace.RetryLoopDoneInfo) {
 			idempotent := info.Idempotent
+			if info.NestedCall {
+				retry.Error("nested call")
+			}
 			retry.Debug("init",
 				zap.Bool("idempotent", idempotent),
 			)
