@@ -355,12 +355,14 @@ func Table(log *zap.Logger, details trace.Details, opts ...option) (t trace.Tabl
 							zap.String("status", session.Status()),
 							zap.String("yql", query.String()),
 							zap.String("params", params.String()),
+							zap.Bool("keepInCache", info.KeepInCache),
 						)
 					} else {
 						log.Debug("executing",
 							zap.String("id", session.ID()),
 							zap.String("status", session.Status()),
 							zap.String("params", params.String()),
+							zap.Bool("keepInCache", info.KeepInCache),
 						)
 					}
 					start := time.Now()
