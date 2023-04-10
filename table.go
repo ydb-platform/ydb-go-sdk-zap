@@ -677,7 +677,7 @@ func Table(log *zap.Logger, d detailer, opts ...option) (t trace.Table) {
 							zap.String("status", session.Status()),
 						)
 					} else {
-						log.Error("put failed",
+						log.Warn("put failed",
 							zap.String("version", version),
 							zap.Duration("latency", time.Since(start)),
 							zap.String("id", session.ID()),
