@@ -9,14 +9,14 @@ import (
 	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
 )
 
-func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace.Topic {
+func Topic(topicLogger *zap.Logger, d detailer, opts ...option) trace.Topic {
 	topicLogger = topicLogger.Named("ydb").Named("topic")
 	t := trace.Topic{}
 
 	///
 	/// Topic reader
 	///
-	if details&trace.TopicReaderStreamLifeCycleEvents != 0 {
+	if d.Details()&trace.TopicReaderStreamLifeCycleEvents != 0 {
 		logger := topicLogger.Named("reader").Named("lifecycle")
 
 		t.OnReaderReconnect = func(startInfo trace.TopicReaderReconnectStartInfo) func(doneInfo trace.TopicReaderReconnectDoneInfo) {
@@ -37,7 +37,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 		}
 
 	}
-	if details&trace.TopicReaderPartitionEvents != 0 {
+	if d.Details()&trace.TopicReaderPartitionEvents != 0 {
 		logger := topicLogger.Named("reader").Named("partition")
 		t.OnReaderPartitionReadStartResponse = func(startInfo trace.TopicReaderPartitionReadStartResponseStartInfo) func(stopInfo trace.TopicReaderPartitionReadStartResponseDoneInfo) { //nolint:lll
 			start := time.Now()
@@ -89,7 +89,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 		}
 	}
 
-	if details&trace.TopicReaderStreamEvents != 0 {
+	if d.Details()&trace.TopicReaderStreamEvents != 0 {
 		logger := topicLogger.Named("reader").Named("stream")
 
 		t.OnReaderCommit = func(startInfo trace.TopicReaderCommitStartInfo) func(doneInfo trace.TopicReaderCommitDoneInfo) {
@@ -213,7 +213,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 		}
 	}
 
-	if details&trace.TopicReaderMessageEvents != 0 {
+	if d.Details()&trace.TopicReaderMessageEvents != 0 {
 		logger := topicLogger.Named("reader").Named("message")
 
 		t.OnReaderSentDataRequest = func(info trace.TopicReaderSentDataRequestInfo) {
@@ -284,7 +284,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 	///
 	/// Topic writer
 	///
-	if details&trace.TopicWriterStreamLifeCycleEvents != 0 {
+	if d.Details()&trace.TopicWriterStreamLifeCycleEvents != 0 {
 		logger := topicLogger.Named("writer").Named("lifecycle")
 		t.OnWriterReconnect = func(startInfo trace.TopicWriterReconnectStartInfo) func(doneInfo trace.TopicWriterReconnectDoneInfo) {
 			start := time.Now()
@@ -341,7 +341,7 @@ func Topic(topicLogger *zap.Logger, details trace.Details, opts ...option) trace
 			}
 		}
 	}
-	if details&trace.TopicWriterStreamEvents != 0 {
+	if d.Details()&trace.TopicWriterStreamEvents != 0 {
 		logger := topicLogger.Named("writer").Named("stream")
 		t.OnWriterCompressMessages = func(startInfo trace.TopicWriterCompressMessagesStartInfo) func(doneInfo trace.TopicWriterCompressMessagesDoneInfo) {
 			start := time.Now()

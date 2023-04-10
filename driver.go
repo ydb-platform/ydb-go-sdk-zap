@@ -10,10 +10,10 @@ import (
 )
 
 // Driver makes trace.Driver with zap lging
-func Driver(l *zap.Logger, details trace.Details, opts ...option) trace.Driver {
+func Driver(l *zap.Logger, d detailer, opts ...option) trace.Driver {
 	l = l.Named("ydb").Named("driver")
 	t := trace.Driver{}
-	if details&trace.DriverRepeaterEvents != 0 {
+	if d.Details()&trace.DriverRepeaterEvents != 0 {
 		l := l.Named("repeater")
 		t.OnRepeaterWakeUp = func(info trace.DriverRepeaterWakeUpStartInfo) func(trace.DriverRepeaterWakeUpDoneInfo) {
 			name := info.Name
@@ -42,7 +42,7 @@ func Driver(l *zap.Logger, details trace.Details, opts ...option) trace.Driver {
 			}
 		}
 	}
-	if details&trace.DriverConnEvents != 0 {
+	if d.Details()&trace.DriverConnEvents != 0 {
 		l := l.Named("conn")
 		t.OnConnTake = func(info trace.DriverConnTakeStartInfo) func(trace.DriverConnTakeDoneInfo) {
 			endpoint := info.Endpoint
@@ -295,7 +295,7 @@ func Driver(l *zap.Logger, details trace.Details, opts ...option) trace.Driver {
 			}
 		}
 	}
-	if details&trace.DriverBalancerEvents != 0 {
+	if d.Details()&trace.DriverBalancerEvents != 0 {
 		l := l.Named("balancer")
 		t.OnBalancerInit = func(info trace.DriverBalancerInitStartInfo) func(trace.DriverBalancerInitDoneInfo) {
 			l.Debug("init start")
@@ -375,7 +375,7 @@ func Driver(l *zap.Logger, details trace.Details, opts ...option) trace.Driver {
 			}
 		}
 	}
-	if details&trace.DriverCredentialsEvents != 0 {
+	if d.Details()&trace.DriverCredentialsEvents != 0 {
 		l := l.Named("credentials")
 		t.OnGetCredentials = func(info trace.DriverGetCredentialsStartInfo) func(trace.DriverGetCredentialsDoneInfo) {
 			l.Debug("getting")

@@ -8,8 +8,8 @@ import (
 )
 
 // Scripting returns trace.Scripting with logging events from details
-func Scripting(log *zap.Logger, details trace.Details, opts ...option) (t trace.Scripting) {
-	if details&trace.ScriptingEvents == 0 {
+func Scripting(log *zap.Logger, d detailer, opts ...option) (t trace.Scripting) {
+	if d.Details()&trace.ScriptingEvents == 0 {
 		return
 	}
 	options := parseOptions(opts...)

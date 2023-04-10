@@ -10,8 +10,8 @@ import (
 	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
 )
 
-func Retry(log *zap.Logger, details trace.Details) (t trace.Retry) {
-	if details&trace.RetryEvents != 0 {
+func Retry(log *zap.Logger, d detailer) (t trace.Retry) {
+	if d.Details()&trace.RetryEvents != 0 {
 		retry := log.Named("retry")
 		t.OnRetry = func(info trace.RetryLoopStartInfo) func(trace.RetryLoopIntermediateInfo) func(trace.RetryLoopDoneInfo) {
 			idempotent := info.Idempotent

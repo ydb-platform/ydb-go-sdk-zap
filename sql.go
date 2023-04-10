@@ -9,13 +9,13 @@ import (
 )
 
 // DatabaseSQL makes trace.DatabaseSQL with logging events from details
-func DatabaseSQL(log *zap.Logger, details trace.Details, opts ...option) (t trace.DatabaseSQL) {
-	if details&trace.DatabaseSQLEvents == 0 {
+func DatabaseSQL(log *zap.Logger, d detailer, opts ...option) (t trace.DatabaseSQL) {
+	if d.Details()&trace.DatabaseSQLEvents == 0 {
 		return
 	}
 	options := parseOptions(opts...)
 	log = log.Named(`ydb`).Named(`database`).Named(`sql`)
-	if details&trace.DatabaseSQLConnectorEvents != 0 {
+	if d.Details()&trace.DatabaseSQLConnectorEvents != 0 {
 		//nolint:govet
 		log := log.Named(`connector`)
 		t.OnConnectorConnect = func(
@@ -41,7 +41,7 @@ func DatabaseSQL(log *zap.Logger, details trace.Details, opts ...option) (t trac
 		}
 	}
 	//nolint:nestif
-	if details&trace.DatabaseSQLConnEvents != 0 {
+	if d.Details()&trace.DatabaseSQLConnEvents != 0 {
 		//nolint:govet
 		log := log.Named(`conn`)
 		t.OnConnPing = func(info trace.DatabaseSQLConnPingStartInfo) func(trace.DatabaseSQLConnPingDoneInfo) {
@@ -211,7 +211,7 @@ func DatabaseSQL(log *zap.Logger, details trace.Details, opts ...option) (t trac
 			}
 		}
 	}
-	if details&trace.DatabaseSQLTxEvents != 0 {
+	if d.Details()&trace.DatabaseSQLTxEvents != 0 {
 		//nolint:govet
 		log := log.Named(`tx`)
 		t.OnTxCommit = func(info trace.DatabaseSQLTxCommitStartInfo) func(trace.DatabaseSQLTxCommitDoneInfo) {
@@ -250,7 +250,7 @@ func DatabaseSQL(log *zap.Logger, details trace.Details, opts ...option) (t trac
 		}
 	}
 	//nolint:nestif
-	if details&trace.DatabaseSQLStmtEvents != 0 {
+	if d.Details()&trace.DatabaseSQLStmtEvents != 0 {
 		//nolint:govet
 		log := log.Named(`stmt`)
 		t.OnStmtClose = func(info trace.DatabaseSQLStmtCloseStartInfo) func(trace.DatabaseSQLStmtCloseDoneInfo) {

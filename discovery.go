@@ -8,18 +8,20 @@ import (
 	"github.com/ydb-platform/ydb-go-sdk/v3/trace"
 )
 
-func Discovery(log *zap.Logger, details trace.Details, opts ...option) (t trace.Discovery) {
-	if details&trace.DiscoveryEvents != 0 {
-		log = log.Named("ydb").Named("discovery")
-		t.OnDiscover = func(info trace.DiscoveryDiscoverStartInfo) func(trace.DiscoveryDiscoverDoneInfo) {
-			address := info.Address
-			database := info.Database
+func Discovery(log *zap.Logger, d detailer, opts ...option) (t trace.Discovery) {
+	log = log.Named("ydb").Named("discovery")
+	t.OnDiscover = func(info trace.DiscoveryDiscoverStartInfo) func(trace.DiscoveryDiscoverDoneInfo) {
+		address := info.Address
+		database := info.Database
+		if d.Details()&trace.DiscoveryEvents != 0 {
 			log.Debug("try to discover",
 				zap.String("address", address),
 				zap.String("database", database),
 			)
-			start := time.Now()
-			return func(info trace.DiscoveryDiscoverDoneInfo) {
+		}
+		start := time.Now()
+		return func(info trace.DiscoveryDiscoverDoneInfo) {
+			if d.Details()&trace.DiscoveryEvents != 0 {
 				if info.Error == nil {
 					endpoints := make([]string, 0, len(info.Endpoints))
 					for _, e := range info.Endpoints {
