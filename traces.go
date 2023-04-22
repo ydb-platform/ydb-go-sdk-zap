@@ -8,7 +8,13 @@ import (
 	"github.com/ydb-platform/ydb-go-sdk/v3"
 )
 
-func WithTraces(l *zap.Logger, d trace.Detailer, opts ...log.Option) ydb.Option {
+type Option = log.Option
+
+func WithLogQuery() Option {
+	return log.WithLogQuery()
+}
+
+func WithTraces(l *zap.Logger, d trace.Detailer, opts ...Option) ydb.Option {
 	a := adapter{l: l}
 	return ydb.MergeOptions(
 		ydb.WithTraceDriver(log.Driver(a, d, opts...)),
