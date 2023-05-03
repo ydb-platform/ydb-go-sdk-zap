@@ -1,8 +1,10 @@
 package zap
 
 import (
+	"context"
 	"github.com/ydb-platform/ydb-go-sdk/v3/log"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var _ log.Logger = adapter{}
@@ -11,24 +13,12 @@ type adapter struct {
 	l *zap.Logger
 }
 
-func (a adapter) Log(params log.Params, msg string, fields ...log.Field) {
+func (a adapter) Log(ctx context.Context, msg string, fields ...log.Field) {
 	l := a.l
-	for _, name := range params.Namespace {
+	for _, name := range log.NamesFromContext(ctx) {
 		l = l.Named(name)
 	}
-	switch params.Level {
-	case log.TRACE, log.DEBUG:
-		l.Debug(msg, fieldsToFields(fields)...)
-	case log.INFO:
-		l.Info(msg, fieldsToFields(fields)...)
-	case log.WARN:
-		l.Warn(msg, fieldsToFields(fields)...)
-	case log.ERROR:
-		l.Error(msg, fieldsToFields(fields)...)
-	case log.FATAL:
-		l.Fatal(msg, fieldsToFields(fields)...)
-	default:
-	}
+	l.Log(ToZapLevel(ctx), msg, ToZapFields(fields)...)
 }
 
 func fieldToField(field log.Field) zap.Field {
@@ -54,10 +44,27 @@ func fieldToField(field log.Field) zap.Field {
 	}
 }
 
-func fieldsToFields(fields []log.Field) []zap.Field {
+func ToZapFields(fields []log.Field) []zap.Field {
 	ff := make([]zap.Field, len(fields))
 	for i, f := range fields {
 		ff[i] = fieldToField(f)
 	}
 	return ff
+}
+
+func ToZapLevel(ctx context.Context) zapcore.Level {
+	switch log.LevelFromContext(ctx) {
+	case log.TRACE, log.DEBUG:
+		return zapcore.DebugLevel
+	case log.INFO:
+		return zapcore.InfoLevel
+	case log.WARN:
+		return zapcore.WarnLevel
+	case log.ERROR:
+		return zapcore.ErrorLevel
+	case log.FATAL:
+		return zapcore.FatalLevel
+	default:
+		return zapcore.InvalidLevel
+	}
 }
