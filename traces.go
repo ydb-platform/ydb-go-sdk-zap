@@ -15,18 +15,7 @@ func WithLogQuery() Option {
 }
 
 func WithTraces(l *zap.Logger, d trace.Detailer, opts ...Option) ydb.Option {
-	a := adapter{l: l}
-	return ydb.MergeOptions(
-		ydb.WithTraceDriver(log.Driver(a, d, opts...)),
-		ydb.WithTraceTable(log.Table(a, d, opts...)),
-		ydb.WithTraceScripting(log.Scripting(a, d, opts...)),
-		ydb.WithTraceScheme(log.Scheme(a, d, opts...)),
-		ydb.WithTraceCoordination(log.Coordination(a, d, opts...)),
-		ydb.WithTraceRatelimiter(log.Ratelimiter(a, d, opts...)),
-		ydb.WithTraceDiscovery(log.Discovery(a, d, opts...)),
-		ydb.WithTraceTopic(log.Topic(a, d, opts...)),
-		ydb.WithTraceDatabaseSQL(log.DatabaseSQL(a, d, opts...)),
-	)
+	return ydb.WithLogger(adapter{l: l}, d, opts...)
 }
 
 func Table(l *zap.Logger, d trace.Detailer, opts ...log.Option) trace.Table {
