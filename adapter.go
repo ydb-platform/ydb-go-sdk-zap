@@ -18,7 +18,7 @@ func (a adapter) Log(ctx context.Context, msg string, fields ...log.Field) {
 	for _, name := range log.NamesFromContext(ctx) {
 		l = l.Named(name)
 	}
-	l.Log(ToZapLevel(ctx), msg, ToZapFields(fields)...)
+	l.Log(Level(ctx), msg, Fields(fields)...)
 }
 
 func fieldToField(field log.Field) zap.Field {
@@ -44,7 +44,7 @@ func fieldToField(field log.Field) zap.Field {
 	}
 }
 
-func ToZapFields(fields []log.Field) []zap.Field {
+func Fields(fields []log.Field) []zap.Field {
 	ff := make([]zap.Field, len(fields))
 	for i, f := range fields {
 		ff[i] = fieldToField(f)
@@ -52,7 +52,7 @@ func ToZapFields(fields []log.Field) []zap.Field {
 	return ff
 }
 
-func ToZapLevel(ctx context.Context) zapcore.Level {
+func Level(ctx context.Context) zapcore.Level {
 	switch log.LevelFromContext(ctx) {
 	case log.TRACE, log.DEBUG:
 		return zapcore.DebugLevel
