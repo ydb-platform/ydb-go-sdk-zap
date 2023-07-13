@@ -11,26 +11,14 @@ jobs:
     concurrency:
       group: unit-${{ github.ref }}-${{ matrix.os }}-${{ matrix.go-version }}
       cancel-in-progress: true
-    strategy:
-      matrix:
-        go-version: [1.17.x]
-        os: [ubuntu]
-    env:
-      OS: ${{ matrix.os }}-latest
-      GO: ${{ matrix.go-version }}
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: 1.17.x
           cache: true
       - name: Build
         run: go build -v ./...
-  finish:
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo OK
