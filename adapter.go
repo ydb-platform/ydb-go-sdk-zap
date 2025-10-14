@@ -18,7 +18,7 @@ func (a adapter) Log(ctx context.Context, msg string, fields ...log.Field) {
 	for _, name := range log.NamesFromContext(ctx) {
 		l = l.Named(name)
 	}
-	l.Log(Level(ctx), msg, Fields(fields)...)
+	l.Log(Level(ctx), msg, Fields(append(log.FieldsFromContext(ctx), fields...))...)
 }
 
 func fieldToField(field log.Field) zap.Field {
